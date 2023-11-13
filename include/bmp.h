@@ -56,7 +56,7 @@ static inline BITMAPFILEHEADER ParseBitmapFileHeader(_In_ const uint8_t* restric
 
     header.bfType           = (((uint16_t) (*(imstream + 1))) << 8) | ((uint16_t) (*imstream));
     if (header.bfType != (((uint16_t) 'M' << 8) | (uint16_t) 'B')) {
-        fputws(L"Error in parse_bitmapfile_header, file appears not to be a Windows BMP file\n", stderr);
+        fputws(L"Error in ParseBitmapFileHeader, file appears not to be a Windows BMP file\n", stderr);
         return header;
     }
     header.bfSize    = *((uint32_t*) (imstream + 2));
@@ -65,7 +65,7 @@ static inline BITMAPFILEHEADER ParseBitmapFileHeader(_In_ const uint8_t* restric
 }
 
 static inline BITMAPINFOHEADER ParseBitmapInfoHeader(_In_ const uint8_t* const restrict imstream, _In_ const uint64_t fsize) {
-    static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "Error: __BITMAPINFOHEADER is not 40 bytes in size");
+    static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "Error: BITMAPINFOHEADER is not 40 bytes in size");
     assert(fsize >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
 
     BITMAPINFOHEADER header = {
@@ -101,6 +101,7 @@ static inline BITMAPINFOHEADER ParseBitmapInfoHeader(_In_ const uint8_t* const r
 }
 
 // A struct representing a BMP image.
+#pragma pack(push,1)
 typedef struct _BMP {
         size_t           fsize;
         size_t           npixels;
@@ -108,6 +109,7 @@ typedef struct _BMP {
         BITMAPINFOHEADER infhead;
         RGBQUAD*         pixel_buffer;
 } WinBMP;
+#pragma pack(pop)
 
 static inline WinBMP NewBmpImage(
     _In_ const uint8_t* const restrict imstream /* will be freed by this procedure */, _In_ const size_t size
@@ -142,9 +144,9 @@ static inline WinBMP NewBmpImage(
 static inline void BmpInfo(_In_ const WinBMP* const restrict image) {
     wprintf_s(
         L"File size %Lf MiBs\nPixel data start offset: %d\n"
-        L"BITMAPINFOHEADER size: %u\nImage width: %u\nImage height: %u\nNumber of planes: %hu\n"
-        L"Number of bits per pixel: %hu\nImage size: %u\nResolution PPM(X): %u\nResolution PPM(Y): %u\nNumber of used colormap entries: % u\n"
-        L"Number of important colors: % u\n",
+        L"BITMAPINFOHEADER size: %u\nImage width: %u\nImage height: %d\nNumber of planes: %hu\n"
+        L"Number of bits per pixel: %hu\nImage size: %u\nResolution PPM(X): %u\nResolution PPM(Y): %u\nNumber of used colormap entries: %d\n"
+        L"Number of important colors: %d\n",
         (long double) (image->fhead.bfSize) / (1024 * 1024LLU),
         image->fhead.bfOffBits,
         image->infhead.biSize,
