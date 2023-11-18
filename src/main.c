@@ -1,8 +1,7 @@
 #include <ascii.h>
 
 int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
-
-    #ifndef _DEBUG
+#ifndef _DEBUG
 
     if (argc < 2) {
         fwprintf_s(stderr, L"Not enough arguments: main.exe expects one or more paths to .BMP files\n");
@@ -32,27 +31,25 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
                 free(image.pixel_buffer);
             }
 
-        }
-        else {
+        } else {
             fwprintf_s(stderr, L"Skipping image %s\n", argv[i]);
             continue;
         }
     }
 
-    #else
-
+#else
 
 #endif // !_DEBUG
 
     uint64_t       fsize  = 0;
-    const uint8_t* buffer = OpenImage(L"./media/vendetta.bmp", &fsize);
+
+    const uint8_t* buffer = OpenImage(L"./media/flower.bmp", &fsize);
     const WinBMP   image  = NewBmpImage(buffer, fsize);
-    const ascii_t  txt    = GenerateASCIIBuffer(&image);
-    for (size_t i = 0; i < txt.length; ++i) {
-        // putwchar(txt.buffer[i]);
-        // printf_s("%d: %c ", txt.buffer[i], txt.buffer[i]);
-        putwchar(txt.buffer[i]);
-    }
+    BmpInfo(&image);
+
+    const buffer_t txt = GenerateASCIIBuffer(&image);
+    _putws(txt.buffer);
+
     free(txt.buffer);
     free(image.pixel_buffer);
 

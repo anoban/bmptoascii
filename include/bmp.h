@@ -1,9 +1,9 @@
 #pragma once
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define WIN32_EXTRA_MEAN
-#include <Windows.h>
+    #define WIN32_LEAN_AND_MEAN
+    #define WIN32_EXTRA_MEAN
+    #include <Windows.h>
 #endif
 
 #include <assert.h>
@@ -31,17 +31,20 @@ static inline uint8_t* OpenImage(_In_ const wchar_t* const restrict file_name, _
             if (ReadFile(handle, buffer, file_size.QuadPart, &nbytes, NULL)) {
                 *nread_bytes = nbytes;
                 return buffer;
+
             } else {
                 fwprintf_s(stderr, L"Error %lu in ReadFile\n", GetLastError());
                 CloseHandle(handle);
                 free(buffer);
                 return NULL;
             }
+
         } else {
             fputws(L"Memory allocation error: malloc returned NULL", stderr);
             CloseHandle(handle);
             return NULL;
         }
+
     } else {
         fwprintf_s(stderr, L"Error %lu in CreateFileW\n", GetLastError());
         return NULL;
@@ -59,8 +62,10 @@ static inline BITMAPFILEHEADER ParseBitmapFileHeader(_In_ const uint8_t* restric
         fputws(L"Error in ParseBitmapFileHeader, file appears not to be a Windows BMP file\n", stderr);
         return header;
     }
+
     header.bfSize    = *((uint32_t*) (imstream + 2));
     header.bfOffBits = *((uint32_t*) (imstream + 10));
+
     return header;
 }
 
@@ -81,10 +86,12 @@ static inline BITMAPINFOHEADER ParseBitmapInfoHeader(_In_ const uint8_t* const r
         .biClrUsed       = 0,
         .biClrImportant  = 0,
     };
+
     if (*((uint32_t*) (imstream + 14U)) > 40) {
         fputws(L"BMP image seems to contain an unparsable file info header", stderr);
         return header;
     }
+
     header.biSize          = *((uint32_t*) (imstream + 14U));
     header.biWidth         = *((uint32_t*) (imstream + 18U));
     header.biHeight        = *((int32_t*) (imstream + 22U));
@@ -101,7 +108,7 @@ static inline BITMAPINFOHEADER ParseBitmapInfoHeader(_In_ const uint8_t* const r
 }
 
 // A struct representing a BMP image.
-#pragma pack(push,1)
+#pragma pack(push, 1)
 typedef struct _BMP {
         size_t           fsize;
         size_t           npixels;
@@ -115,13 +122,15 @@ static inline WinBMP NewBmpImage(
     _In_ const uint8_t* const restrict imstream /* will be freed by this procedure */, _In_ const size_t size
 ) {
     assert(imstream);
+
     const BITMAPFILEHEADER fh    = ParseBitmapFileHeader(imstream, size);
     const BITMAPINFOHEADER infh  = ParseBitmapInfoHeader(imstream, size);
     WinBMP                 image = { .fsize = size, .npixels = (size - 54) / 4, .fhead = fh, .infhead = infh };
+
     image.pixel_buffer           = malloc(size - 54);
     if (image.pixel_buffer) {
         memcpy_s(image.pixel_buffer, size - 54, imstream + 54, size - 54);
-        ;
+
     } else {
         fwprintf_s(stderr, L"Error in %s @ line %d: malloc falied!\n", __FUNCTIONW__, __LINE__);
         return (WinBMP) {
@@ -138,6 +147,7 @@ static inline WinBMP NewBmpImage(
             NULL
         };
     }
+
     return image;
 }
 
@@ -147,7 +157,7 @@ static inline void BmpInfo(_In_ const WinBMP* const restrict image) {
         L"BITMAPINFOHEADER size: %u\nImage width: %u\nImage height: %d\nNumber of planes: %hu\n"
         L"Number of bits per pixel: %hu\nImage size: %u\nResolution PPM(X): %u\nResolution PPM(Y): %u\nNumber of used colormap entries: %d\n"
         L"Number of important colors: %d\n",
-        (long double) (image->fhead.bfSize) / (1024 * 1024LLU),
+        (long double) (image->fhead.bfSize) / (1024LLU * 1024LLU),
         image->fhead.bfOffBits,
         image->infhead.biSize,
         image->infhead.biWidth,
