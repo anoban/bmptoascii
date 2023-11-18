@@ -5,8 +5,6 @@
 static const wchar_t wascii[]     = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
                                       L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
 
-static const wchar_t min_wascii[] = { L'@', L'J', L'D', L'%', L'*', L'P', L'+', L'Y', L'$', L',', L'.' };
-
 // Does a weighted averaging on RGB values: (pix.BLUE * 0.299L) + (pix.GREEN * 0.587) + (pix.RED * 0.114)
 static __forceinline wchar_t __stdcall ScaleRgbQuad(_In_ const RGBQUAD* const restrict pixel) {
     return wascii
