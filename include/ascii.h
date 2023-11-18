@@ -9,8 +9,8 @@ static const wchar_t min_wascii[] = { L'@', L'J', L'D', L'%', L'*', L'P', L'+', 
 
 // Does a weighted averaging on RGB values: (pix.BLUE * 0.299L) + (pix.GREEN * 0.587) + (pix.RED * 0.114)
 static __forceinline wchar_t __stdcall ScaleRgbQuad(_In_ const RGBQUAD* const restrict pixel) {
-    return min_wascii
-        [((unsigned short) ((pixel->rgbBlue * 0.299L) + pixel->rgbGreen * 0.587L + pixel->rgbRed * 0.114L)) % __crt_countof(min_wascii)];
+    return wascii
+        [((unsigned short) ((pixel->rgbBlue * 0.299L) + pixel->rgbGreen * 0.587L + pixel->rgbRed * 0.114L)) % __crt_countof(wascii)];
 }
 
 typedef struct buffer {
@@ -33,32 +33,58 @@ static inline buffer_t GenerateASCIIBuffer(_In_ const WinBMP* const restrict ima
     }
 
     /*
-    In most contemporary .BMP images, the pixel ordering seems to be bottom up.
-    i.e,
-    (pixel at the top right corner of the image)
-    this will be the last pixel --> 10 11 12 13 14 15 16 17 18 19
-                                    00 01 02 03 04 05 06 07 08 09 <-- this is the first pixel in the buffer
-                                                                     (pixel at the bottom left corner of the image)
+    The pixel data is organized in rows from bottom to top and, within each row, from left to right. Each row is called a "scan line".
+    If the image height is given as a negative number, then the rows are ordered from top to bottom.
+    In most contemporary .BMP images, the pixel ordering seems to be bottom up. i.e, (pixel at the top right corner of the image) this will
+    be the last pixel --> 10 11 12 13 14 15 16 17 18 19 00 01 02 03 04 05 06 07 08 09 <-- this is the first pixel in the buffer (pixel at
+    the bottom left corner of the image)
     */
 
+    size_t caret = 0;
     // if pixels are ordered top down. i.e the first pixel in the buffer is the one at the top left corner of the image.
-    if (image->infhead.biHeight < 0) { /* TODO */
+    if (image->infhead.biHeight < 0) { 
+        for (int64_t nrows = 0; nrows < image->infhead.biHeight; nrows++) {
+            for (int64_t ncols = 0; ncols < image->infhead.biWidth; ncols++) {
+                ;
+                ;
+            }
+        }
+        return (buffer_t) { txtbuff, caret };
     }
 
     // if pixels are ordered bottom up, start the traversal from the last pixel and move up.
-    size_t caret = 0;
-    if (image->infhead.biHeight >= 0) {
-        int64_t ncols = 0;
+    else {
+        // traverse up along the height
         for (int64_t nrows = image->infhead.biHeight - 1; nrows >= 0; --nrows) {
-            ncols = image->infhead.biWidth - 1;
-            for (; ncols >= 0; --ncols) txtbuff[caret++] = ScaleRgbQuad(&image->pixel_buffer[ncols * nrows]);
-            txtbuff[caret]   = L'\n';
-            txtbuff[++caret] = L'\r';
-            caret++;
+            // traverse left to right inside "scan lines"
+            for (int64_t ncols = 0; ncols < image->infhead.biWidth; ncols++)
+                txtbuff[caret++] = ScaleRgbQuad(&image->pixel_buffer[ncols + (nrows * image->infhead.biWidth)]);
+
+            txtbuff[caret++] = L'\n';
+            txtbuff[caret++] = L'\r';
         }
 
         assert(caret == nwchars);
+        return (buffer_t) { txtbuff, caret };
     }
+ 
+}
 
-    return (buffer_t) { txtbuff, caret };
+// Generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width. (140 chars)
+// Image height is not catered to here!
+static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const restrict image) { 
+
+   // downscaling factor, one wchar_t in our buffer will have to represent this many RGBQUADs in a scan line.
+    const size_t      window_w                 = ceill(image->infhead.biWidth / 140.0L);
+
+    /*
+    If the image width is 1200 pixels, window_w will be ceil(1200 / 140) = ceil(8.57142857142857) = 9
+    So we'll combine the averages of 9 subsequent pixels to represent by a wchar_t. 
+    */
+
+    const size_t      nwchars /* per line */ = (image->infhead.biWidth / window_w) /* intentional truncation */ + 1;
+    // = (1200 / 9) + 1
+    // = trunc(133.333333333333) + 1
+    // = 133 + 1
+    // = 134
 }
