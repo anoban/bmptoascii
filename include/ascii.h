@@ -1,11 +1,12 @@
 #pragma once
-#include <bmp.h>
+#ifndef __ASCII_H_
+    #define __ASCII_H_
+
+    #include <bmp.h>
 
 // ASCII characters in descending order of luminance
-static const wchar_t wascii[]     = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
-                                      L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
-
-static const wchar_t min_wascii[] = { L'@', L'J', L'D', L'%', L'*', L'P', L'+', L'Y', L'$', L',', L'.' };
+static const wchar_t wascii[] = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
+                                  L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
 
 // Does a weighted averaging on RGB values: (pix.BLUE * 0.299L) + (pix.GREEN * 0.587) + (pix.RED * 0.114)
 static __forceinline wchar_t __stdcall ScaleRgbQuad(_In_ const RGBQUAD* const restrict pixel) {
@@ -42,7 +43,7 @@ static inline buffer_t GenerateASCIIBuffer(_In_ const WinBMP* const restrict ima
 
     size_t caret = 0;
     // if pixels are ordered top down. i.e the first pixel in the buffer is the one at the top left corner of the image.
-    if (image->infhead.biHeight < 0) { 
+    if (image->infhead.biHeight < 0) {
         for (int64_t nrows = 0; nrows < image->infhead.biHeight; nrows++) {
             for (int64_t ncols = 0; ncols < image->infhead.biWidth; ncols++) {
                 ;
@@ -67,24 +68,24 @@ static inline buffer_t GenerateASCIIBuffer(_In_ const WinBMP* const restrict ima
         assert(caret == nwchars);
         return (buffer_t) { txtbuff, caret };
     }
- 
 }
 
 // Generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width. (140 chars)
 // Image height is not catered to here!
-static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const restrict image) { 
-
-   // downscaling factor, one wchar_t in our buffer will have to represent this many RGBQUADs in a scan line.
-    const size_t      window_w                 = ceill(image->infhead.biWidth / 140.0L);
+static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const restrict image) {
+    // downscaling factor, one wchar_t in our buffer will have to represent this many RGBQUADs in a scan line.
+    const size_t window_w               = ceill(image->infhead.biWidth / 140.0L);
 
     /*
     If the image width is 1200 pixels, window_w will be ceil(1200 / 140) = ceil(8.57142857142857) = 9
-    So we'll combine the averages of 9 subsequent pixels to represent by a wchar_t. 
+    So we'll combine the averages of 9 subsequent pixels to represent by a wchar_t.
     */
 
-    const size_t      nwchars /* per line */ = (image->infhead.biWidth / window_w) /* intentional truncation */ + 1;
+    const size_t nwchars /* per line */ = (image->infhead.biWidth / window_w) /* intentional truncation */ + 1;
     // = (1200 / 9) + 1
     // = trunc(133.333333333333) + 1
     // = 133 + 1
     // = 134
 }
+
+#endif //__ASCII_H_

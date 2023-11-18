@@ -1,16 +1,18 @@
 #pragma once
+#ifndef __BMP_H_
+    #define __BMP_H_
 
-#ifdef _WIN32
-    #define WIN32_LEAN_AND_MEAN
-    #define WIN32_EXTRA_MEAN
-    #include <Windows.h>
-#endif
+    #ifdef _WIN32
+        #define WIN32_LEAN_AND_MEAN
+        #define WIN32_EXTRA_MEAN
+        #include <Windows.h>
+    #endif
 
-#include <assert.h>
-#include <stdint.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+    #include <assert.h>
+    #include <math.h>
+    #include <stdint.h>
+    #include <stdio.h>
+    #include <stdlib.h>
 
 static inline uint8_t* OpenImage(_In_ const wchar_t* const restrict file_name, _Out_ uint64_t* const nread_bytes) {
     *nread_bytes = 0;
@@ -108,8 +110,8 @@ static inline BITMAPINFOHEADER ParseBitmapInfoHeader(_In_ const uint8_t* const r
     return header;
 }
 
-// A struct representing a BMP image.
-#pragma pack(push, 1)
+    // A struct representing a BMP image.
+    #pragma pack(push, 1)
 typedef struct _BMP {
         size_t           fsize;
         size_t           npixels;
@@ -117,7 +119,7 @@ typedef struct _BMP {
         BITMAPINFOHEADER infhead;
         RGBQUAD*         pixel_buffer;
 } WinBMP;
-#pragma pack(pop)
+    #pragma pack(pop)
 
 static inline WinBMP NewBmpImage(
     _In_ const uint8_t* const restrict imstream /* will be freed by this procedure */, _In_ const size_t size
@@ -189,3 +191,5 @@ static inline void BmpInfo(_In_ const WinBMP* const restrict image) {
 
     return;
 }
+
+#endif //__BMP_H_
