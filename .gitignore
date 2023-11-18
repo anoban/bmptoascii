@@ -73,10 +73,15 @@ StyleCopReport.xml
 *_p.c
 *_h.h
 *.ilk
+*.exe
 *.meta
 *.obj
+*.o
 *.iobj
 *.pch
+*.lib
+*.dll
+*.exp
 *.pdb
 *.ipdb
 *.pgc
