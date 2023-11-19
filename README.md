@@ -5,7 +5,7 @@
 -------------
 
 #### ___Low Resolution Samples___
-![Circle](./media/circle.bmp)
+![Circle](./media/CIRCLE.bmp)
 
 
 ![Wine Glass](./media/wineglass.bmp)
