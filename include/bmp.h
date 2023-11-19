@@ -2,17 +2,14 @@
 #ifndef __BMP_H_
     #define __BMP_H_
 
-    #ifdef _WIN32
-        #define WIN32_LEAN_AND_MEAN
-        #define WIN32_EXTRA_MEAN
-        #include <Windows.h>
-    #endif
-
+    #define WIN32_LEAN_AND_MEAN
+    #define WIN32_EXTRA_MEAN
     #include <assert.h>
     #include <math.h>
     #include <stdint.h>
     #include <stdio.h>
     #include <stdlib.h>
+    #include <Windows.h>
 
 static inline uint8_t* OpenImage(_In_ const wchar_t* const restrict file_name, _Out_ uint64_t* const nread_bytes) {
     *nread_bytes = 0;
@@ -146,7 +143,7 @@ static inline WinBMP NewBmpImage(
               0, 0,
               0, 0,
               0, 0,
-              0, },
+              0},
             NULL
         };
     }

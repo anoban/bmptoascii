@@ -1,7 +1,6 @@
 #pragma once
 #ifndef __ASCII_H_
     #define __ASCII_H_
-
     #include <bmp.h>
 
 // ASCII characters in descending order of luminance
