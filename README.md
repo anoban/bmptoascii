@@ -1,10 +1,9 @@
 # ___`A minimal ASCII art generator`___
+
 ---------------
-
-### - ___Prints out the ASCII image of a `Windows BMP` image file___
-
-### ___Demo___
+### ___Prints out the ASCII image of a `Windows BMP` image file___
 -------------
+
 #### ___Low Resolution Samples___
 ![Circle](./media/circle.bmp)
 
