@@ -37,14 +37,16 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
 
 #else
 
-    const uint8_t* buffer = OpenImage(L"./media/flower.bmp", &fsize);
+    const uint8_t* buffer = OpenImage(L"./media/highres/blonde.bmp", &fsize);
     const WinBMP   image  = NewBmpImage(buffer, fsize);
     BmpInfo(&image);
 
     const buffer_t txt = GenerateASCIIBuffer(&image);
-    _putws(txt.buffer);
+    if (txt.buffer) {
+        _putws(txt.buffer);
+        free(txt.buffer);
+    }
 
-    free(txt.buffer);
     free(image.pixel_buffer);
 
 #endif // !_DEBUG

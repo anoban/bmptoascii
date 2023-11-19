@@ -111,8 +111,8 @@ static inline BITMAPINFOHEADER ParseBitmapInfoHeader(_In_ const uint8_t* const r
 }
 
     // A struct representing a BMP image.
-    #pragma pack(push, 1)
-typedef struct _BMP {
+    #pragma pack(push, 4)
+typedef struct _WinBMP {
         size_t           fsize;
         size_t           npixels;
         BITMAPFILEHEADER fhead;
@@ -156,7 +156,7 @@ static inline WinBMP NewBmpImage(
 
 static inline void BmpInfo(_In_ const WinBMP* const restrict image) {
     wprintf_s(
-        L"File size %Lf MiBs\nPixel data start offset: %d\n"
+        L"\nFile size %Lf MiBs\nPixel data start offset: %d\n"
         L"BITMAPINFOHEADER size: %u\nImage width: %u\nImage height: %d\nNumber of planes: %hu\n"
         L"Number of bits per pixel: %hu\nImage size: %u\nResolution PPM(X): %u\nResolution PPM(Y): %u\nNumber of used colormap entries: %d\n"
         L"Number of important colors: %d\n",
@@ -186,10 +186,10 @@ static inline void BmpInfo(_In_ const WinBMP* const restrict image) {
         L"%s BMP file\n"
         L"BMP pixel ordering: %s\n",
         image->infhead.biSizeImage != 0 ? L"Compressed" : L"Uncompressed",
-        image->infhead.biHeight >= 0 ? L"BOTTOMUP" : L"TOPDOWN"
+        image->infhead.biHeight >= 0 ? L"BOTTOMUP\n" : L"TOPDOWN\n"
     );
 
     return;
 }
 
-#endif //__BMP_H_
+#endif // !__BMP_H_
