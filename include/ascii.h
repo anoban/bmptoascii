@@ -4,12 +4,18 @@
     #include <bmp.h>
 
 // ASCII characters in descending order of luminance
-static const wchar_t wascii[] = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
-                                  L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
+static const wchar_t wascii[]     = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
+                                      L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
+
+static const wchar_t wascii_ext[] = { L' ',  L'.', L'\'', L'`', L'^', L'"', L',', L':', L';', L'I', L'l', L'!', L'i', L'>',
+                                      L'<',  L'~', L'+',  L'_', L'-', L'?', L']', L'[', L'}', L'{', L'1', L')', L'(', L'|',
+                                      L'\\', L'/', L't',  L'f', L'j', L'r', L'x', L'n', L'u', L'v', L'c', L'z', L'X', L'Y',
+                                      L'U',  L'J', L'C',  L'L', L'Q', L'0', L'O', L'Z', L'm', L'w', L'q', L'p', L'd', L'b',
+                                      L'k',  L'h', L'a',  L'o', L'*', L'#', L'M', L'W', L'&', L'8', L'%', L'B', L'@', L'$' };
 
 // Does a weighted averaging on RGBQUAD values: (pix.BLUE * 0.299L) + (pix.GREEN * 0.587) + (pix.RED * 0.114)
 static __forceinline wchar_t __stdcall ScaleRgbQuad(_In_ const RGBQUAD* const restrict pixel) {
-    return wascii[(size_t) (pixel->rgbBlue * 0.299L + pixel->rgbGreen * 0.587L + pixel->rgbRed * 0.114L) % __crt_countof(wascii)];
+    return wascii_ext[(size_t) (pixel->rgbBlue * 0.299L + pixel->rgbGreen * 0.587L + pixel->rgbRed * 0.114L) % __crt_countof(wascii_ext)];
 }
 
 typedef struct buffer {
@@ -86,8 +92,9 @@ static inline buffer_t GenerateRawASCIIBuffer(_In_ const WinBMP* const restrict 
 
 static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const restrict image) {
     // downscaling needs to be done in pixel blocks.
-    const size_t block_w = (size_t) ceill(image->infhead.biWidth / 140.0L);
-    const size_t block_h = (size_t) ceill(image->infhead.biHeight / 140.0L);
+    const size_t block_w   = (size_t) ceill(image->infhead.biWidth / 140.0L);
+    const size_t block_h   = (size_t) ceill(image->infhead.biHeight / 140.0L);
+    const size_t block_dim = block_h * block_w;
 
     // We'd have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent that block
     // as a wchar_t. one wchar_t in our buffer will have to represent (block_w x block_h) RGBQUADs
@@ -100,7 +107,7 @@ static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const re
 
     */
 
-    const size_t nwchars = (image->infhead.biWidth / block_w) * (image->infhead.biHeight / block_h) + 2 /* that's for pixel blocks */ +
+    const size_t nwchars   = (image->infhead.biWidth / block_w) * (image->infhead.biHeight / block_h) + 2 /* that's for pixel blocks */ +
                            (image->infhead.biHeight / block_h) + 1 /* and that's for CRLFs */;
     wchar_t* const txtbuff = malloc(nwchars * sizeof(wchar_t));
     if (!txtbuff) {
@@ -123,7 +130,10 @@ static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const re
                 }
             }
 
-            txtbuff[caret++] = wascii[(size_t) (avg_B * 0.299L + avg_G * 0.587L + avg_R * 0.114L) % __crt_countof(wascii)];
+            avg_B            /= block_dim;
+            avg_G            /= block_dim;
+            avg_R            /= block_dim;
+            txtbuff[caret++]  = wascii[(size_t) (avg_B * 0.299L + avg_G * 0.587L + avg_R * 0.114L) % __crt_countof(wascii)];
             avg_B = avg_G = avg_R = 0.0L;
         }
         txtbuff[caret++] = L'\n';

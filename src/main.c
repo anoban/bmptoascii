@@ -37,7 +37,7 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
 
 #else
 
-    const uint8_t* buffer = OpenImage(L"./media/highres/hat.bmp", &fsize);
+    const uint8_t* buffer = OpenImage(L"./media/highres/museum.bmp", &fsize);
     const WinBMP   image  = NewBmpImage(buffer, fsize);
     BmpInfo(&image);
 
