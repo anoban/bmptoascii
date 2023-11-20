@@ -8,16 +8,13 @@
 ![Circle](./media/circle.bmp)
 
 
-![Wine Glass](./media/wineglass.bmp)
-
+![Wine Glass](./media/wineglass.bmp) :=>
+![ASCII](./wineglass.png)
 
 ![Vendetta](./media/vendetta.bmp)
 
 
 #### ___High Resolution Samples___
-![Gun](./media/highres/gun.bmp)
-
-
 ![Hat](./media/highres/hat.bmp)
 
 
@@ -28,3 +25,4 @@
 - Doesn't support any other image formats.
 - `Win32` oriented, portability is a non-goal.
 - Most routines are implemented as inline functions in the headers.
+- Images (ASCII arts) often end up a little distorted, in particular, they tend to become narrow and tall compared to the original `.BMP` image.

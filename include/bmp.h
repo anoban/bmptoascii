@@ -134,17 +134,9 @@ static inline WinBMP NewBmpImage(
     } else {
         fwprintf_s(stderr, L"Error in %s @ line %d: malloc falied!\n", __FUNCTIONW__, __LINE__);
         return (WinBMP) {
-            0,
-            0,
-            { 0, 0, 0, 0, 0 },
-            {
-              0, 0,
-              0, 0,
-              0, 0,
-              0, 0,
-              0, 0,
-              0},
-            NULL
+            0, 0, { 0, 0, 0, 0, 0 },
+              { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+              NULL
         };
     }
 

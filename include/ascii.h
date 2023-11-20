@@ -17,7 +17,7 @@ typedef struct buffer {
         const size_t   length; // count of wchar_t s in the buffer.
 } buffer_t;
 
-static inline buffer_t GenerateASCIIBuffer(_In_ const WinBMP* const restrict image) {
+static inline buffer_t GenerateRawASCIIBuffer(_In_ const WinBMP* const restrict image) {
     if (image->infhead.biWidth > 140) {
         fwprintf_s(
             stderr,
@@ -69,7 +69,7 @@ static inline buffer_t GenerateASCIIBuffer(_In_ const WinBMP* const restrict ima
         for (int64_t nrows = image->infhead.biHeight - 1LL; nrows >= 0; --nrows) {
             // traverse left to right inside "scan lines"
             for (int64_t ncols = 0; ncols < image->infhead.biWidth; ncols++)
-                txtbuff[caret++] = ScaleRgbQuad(&image->pixel_buffer[ncols + (nrows * image->infhead.biWidth)]);
+                txtbuff[caret++] = ScaleRgbQuad(&image->pixel_buffer[(nrows * image->infhead.biWidth) + ncols]);
 
             txtbuff[caret++] = L'\n';
             txtbuff[caret++] = L'\r';
@@ -85,11 +85,9 @@ static inline buffer_t GenerateASCIIBuffer(_In_ const WinBMP* const restrict ima
 // the image height.
 
 static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const restrict image) {
-    const size_t   npixels                = (size_t) image->infhead.biHeight * image->infhead.biWidth;
-
     // downscaling needs to be done in pixel blocks.
-    const size_t   block_w                = (size_t) ceill(image->infhead.biWidth / 140.0L);
-    const size_t   block_h                = (size_t) ceill(image->infhead.biHeight / 140.0L);
+    const size_t block_w = (size_t) ceill(image->infhead.biWidth / 140.0L);
+    const size_t block_h = (size_t) ceill(image->infhead.biHeight / 140.0L);
 
     // We'd have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent that block
     // as a wchar_t. one wchar_t in our buffer will have to represent (block_w x block_h) RGBQUADs
@@ -102,22 +100,44 @@ static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const re
 
     */
 
-    const size_t   nwchars /* per line */ = (image->infhead.biWidth / block_w) /* intentional truncation */ + 1;
-    // = (1200 / 9) + 1
-    // = trunc(133.333333333333) + 1
-    // = 133 + 1
-    // = 134
-
-    wchar_t* const txtbuff                = malloc(100);
-
-    long double    avg_B = 0.0L, avg_G = 0.0L, avg_R = 0.0L;
-
-    for (int64_t nrows = image->infhead.biHeight - 1LLU; nrows >= 0; nrows -= block_w) { // start traversal at the bottom most scan line
-        for (int64_t ncols = 0; ncols < image->infhead.biWidth; ncols += block_h) {      // traverse left to right in scan lines
-            ;
-            ;
-        }
+    const size_t nwchars = (image->infhead.biWidth / block_w) * (image->infhead.biHeight / block_h) + 2 /* that's for pixel blocks */ +
+                           (image->infhead.biHeight / block_h) + 1 /* and that's for CRLFs */;
+    wchar_t* const txtbuff = malloc(nwchars * sizeof(wchar_t));
+    if (!txtbuff) {
+        fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
+        return (buffer_t) { NULL, 0 };
     }
+
+    long double avg_B = 0.0L, avg_G = 0.0L, avg_R = 0.0L;
+    size_t      caret = 0;
+
+    for (int64_t nrows = image->infhead.biHeight - 1LLU; nrows >= 0; nrows -= block_h) { // start traversal at the bottom most scan line
+        for (int64_t ncols = 0; ncols < image->infhead.biWidth; ncols += block_w) {      // traverse left to right in scan lines
+
+            // deal with blocks
+            for (int64_t bh = nrows; bh > (nrows - block_w); --bh) {
+                for (int64_t bw = ncols; bw < (ncols + block_w); ++bw) {
+                    avg_B += image->pixel_buffer[(bh * image->infhead.biWidth) + bw].rgbBlue;
+                    avg_G += image->pixel_buffer[(bh * image->infhead.biWidth) + bw].rgbGreen;
+                    avg_R += image->pixel_buffer[(bh * image->infhead.biWidth) + bw].rgbRed;
+                }
+            }
+
+            txtbuff[caret++] = wascii[(size_t) (avg_B * 0.299L + avg_G * 0.587L + avg_R * 0.114L) % __crt_countof(wascii)];
+            avg_B = avg_G = avg_R = 0.0L;
+        }
+        txtbuff[caret++] = L'\n';
+        txtbuff[caret++] = L'\r';
+    }
+
+    // assert(caret == nwchars);
+    return (buffer_t) { txtbuff, caret };
+}
+
+// a wrapper for GenerateRawASCIIBuffer and GenerateDownScaledASCIIBuffer
+static __forceinline buffer_t __stdcall GenerateASCIIBuffer(_In_ const WinBMP* const restrict image) {
+    if (image->infhead.biWidth < 140) return GenerateRawASCIIBuffer(image);
+    return GenerateDownScaledASCIIBuffer(image);
 }
 
 #endif // !__ASCII_H_
