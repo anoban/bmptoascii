@@ -121,7 +121,6 @@ typedef struct _WinBMP {
 static inline WinBMP NewBmpImage(
     _In_ const uint8_t* const restrict imstream /* will be freed by this procedure */, _In_ const size_t size
 ) {
-
     WinBMP image = {
         .fsize = 0, .npixels = 0, .fhead = { 0, 0, 0, 0, 0 },
                 .infhead = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -133,10 +132,10 @@ static inline WinBMP NewBmpImage(
         return image;
     }
 
-    const BITMAPFILEHEADER fh    = __ParseBitmapFileHeader(imstream, size);
-    const BITMAPINFOHEADER infh  = __ParseBitmapInfoHeader(imstream, size);
-    
-    uint8_t* const buffer            = malloc(size - 54);
+    const BITMAPFILEHEADER fh     = __ParseBitmapFileHeader(imstream, size);
+    const BITMAPINFOHEADER infh   = __ParseBitmapInfoHeader(imstream, size);
+
+    uint8_t* const         buffer = malloc(size - 54);
     if (buffer) {
         memcpy_s(buffer, size - 54, imstream + 54, size - 54);
     } else {
