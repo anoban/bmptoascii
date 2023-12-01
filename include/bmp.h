@@ -51,7 +51,7 @@ static inline uint8_t* OpenImage(_In_ const wchar_t* const restrict file_name, _
     }
 }
 
-static inline BITMAPFILEHEADER ParseBitmapFileHeader(_In_ const uint8_t* restrict imstream, _In_ const uint64_t fsize) {
+static inline BITMAPFILEHEADER __ParseBitmapFileHeader(_In_ const uint8_t* restrict imstream, _In_ const uint64_t fsize) {
     static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "Error: BITMAPFILEHEADER is not 14 bytes in size.");
     assert(fsize >= sizeof(BITMAPFILEHEADER));
 
@@ -59,7 +59,7 @@ static inline BITMAPFILEHEADER ParseBitmapFileHeader(_In_ const uint8_t* restric
 
     header.bfType           = (((uint16_t) (*(imstream + 1))) << 8) | ((uint16_t) (*imstream));
     if (header.bfType != (((uint16_t) 'M' << 8) | (uint16_t) 'B')) {
-        fputws(L"Error in ParseBitmapFileHeader, file appears not to be a Windows BMP file\n", stderr);
+        fputws(L"Error in __ParseBitmapFileHeader, file appears not to be a Windows BMP file\n", stderr);
         return header;
     }
 
@@ -69,7 +69,7 @@ static inline BITMAPFILEHEADER ParseBitmapFileHeader(_In_ const uint8_t* restric
     return header;
 }
 
-static inline BITMAPINFOHEADER ParseBitmapInfoHeader(_In_ const uint8_t* const restrict imstream, _In_ const uint64_t fsize) {
+static inline BITMAPINFOHEADER __ParseBitmapInfoHeader(_In_ const uint8_t* const restrict imstream, _In_ const uint64_t fsize) {
     static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "Error: BITMAPINFOHEADER is not 40 bytes in size");
     assert(fsize >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
 
@@ -121,26 +121,30 @@ typedef struct _WinBMP {
 static inline WinBMP NewBmpImage(
     _In_ const uint8_t* const restrict imstream /* will be freed by this procedure */, _In_ const size_t size
 ) {
-    assert(imstream);
 
-    const BITMAPFILEHEADER fh    = ParseBitmapFileHeader(imstream, size);
-    const BITMAPINFOHEADER infh  = ParseBitmapInfoHeader(imstream, size);
-    WinBMP                 image = { .fsize = size, .npixels = (size - 54) / 4, .fhead = fh, .infhead = infh };
+    WinBMP image = {
+        .fsize = 0, .npixels = 0, .fhead = { 0, 0, 0, 0, 0 },
+                .infhead = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                .pixel_buffer = NULL
+    };
 
-    image.pixel_buffer           = malloc(size - 54);
-    if (image.pixel_buffer) {
-        memcpy_s(image.pixel_buffer, size - 54, imstream + 54, size - 54);
-
-    } else {
-        fwprintf_s(stderr, L"Error in %s @ line %d: malloc falied!\n", __FUNCTIONW__, __LINE__);
-        return (WinBMP) {
-            0, 0, { 0, 0, 0, 0, 0 },
-              { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-              NULL
-        };
+    if (!imstream) {
+        fwprintf_s(stderr, L"Error in %s @ line %d: NULL buffer received!\n", __FUNCTIONW__, __LINE__);
+        return image;
     }
 
-    return image;
+    const BITMAPFILEHEADER fh    = __ParseBitmapFileHeader(imstream, size);
+    const BITMAPINFOHEADER infh  = __ParseBitmapInfoHeader(imstream, size);
+    
+    uint8_t* const buffer            = malloc(size - 54);
+    if (buffer) {
+        memcpy_s(buffer, size - 54, imstream + 54, size - 54);
+    } else {
+        fwprintf_s(stderr, L"Error in %s @ line %d: malloc falied!\n", __FUNCTIONW__, __LINE__);
+        return image;
+    }
+
+    return (WinBMP) { .fsize = size, .npixels = (size - 54) / 4, .fhead = fh, .infhead = infh, .pixel_buffer = buffer };
 }
 
 static inline void BmpInfo(_In_ const WinBMP* const restrict image) {

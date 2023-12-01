@@ -37,11 +37,11 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
 
 #else
 
-    const uint8_t* buffer = OpenImage(L"./media/highres/big.bmp", &fsize);
-    const WinBMP   image  = NewBmpImage(buffer, fsize);
-    BmpInfo(&image);
+    const uint8_t* const buffer = OpenImage(L"./media/pose.bmp", &fsize);
+    const WinBMP         image  = NewBmpImage(buffer, fsize);
+    // BmpInfo(&image);
 
-    const buffer_t txt = GenerateASCIIBuffer(&image);
+    const buffer_t       txt    = GenerateASCIIBuffer(&image);
     if (txt.buffer) {
         _putws(txt.buffer);
         free(txt.buffer);

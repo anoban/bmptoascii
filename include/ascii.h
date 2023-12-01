@@ -3,7 +3,7 @@
     #define __ASCII_H_
     #include <bmp.h>
 
-// ASCII characters in descending order of luminance
+// ASCII characters in ascending order of luminance
 static const wchar_t wascii[]     = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
                                       L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
 
@@ -13,9 +13,25 @@ static const wchar_t wascii_ext[] = { L' ',  L'.', L'\'', L'`', L'^', L'"', L','
                                       L'U',  L'J', L'C',  L'L', L'Q', L'0', L'O', L'Z', L'm', L'w', L'q', L'p', L'd', L'b',
                                       L'k',  L'h', L'a',  L'o', L'*', L'#', L'M', L'W', L'&', L'8', L'%', L'B', L'@', L'$' };
 
-// Does a weighted averaging on RGBQUAD values: (pix.BLUE * 0.299L) + (pix.GREEN * 0.587) + (pix.RED * 0.114)
-static __forceinline wchar_t __stdcall ScaleRgbQuad(_In_ const RGBQUAD* const restrict pixel) {
+// weighted averaging: (pix.BLUE * 0.299L) + (pix.GREEN * 0.587) + (pix.RED * 0.114)
+static __forceinline wchar_t __stdcall __ScaleRgbQuadWAVG(_In_ const RGBQUAD* const restrict pixel) {
     return wascii_ext[(size_t) (pixel->rgbBlue * 0.299L + pixel->rgbGreen * 0.587L + pixel->rgbRed * 0.114L) % __crt_countof(wascii_ext)];
+}
+
+// regular arithmetic average using integer division
+static __forceinline wchar_t __stdcall __ScaleRgbQuadAVG(_In_ const RGBQUAD* const restrict pixel) {
+    return wascii_ext[(((size_t) (pixel->rgbBlue) + pixel->rgbGreen + pixel->rgbRed) / 3) % __crt_countof(wascii_ext)];
+}
+
+// luminosity based averaging: (pix.BLUE * 0.2126L) + (pix.GREEN * 0.7152L) + (pix.RED * 0.0722L)
+static __forceinline wchar_t __stdcall __ScaleRgbQuadLUMIN(_In_ const RGBQUAD* const restrict pixel) {
+    return wascii_ext
+        [(size_t) (pixel->rgbBlue * 0.2126L + pixel->rgbGreen * 0.7152L + pixel->rgbRed * 0.0722L) % __crt_countof(wascii_ext)];
+}
+
+// binarize the wchar_t
+static __forceinline wchar_t __stdcall __ScaleRgbQuadBIN(_In_ const RGBQUAD* const restrict pixel) {
+    return (((size_t) (pixel->rgbBlue) + pixel->rgbGreen + pixel->rgbRed) / 3) > 128 ? L'.' : L'$';
 }
 
 typedef struct buffer {
@@ -23,17 +39,8 @@ typedef struct buffer {
         const size_t   length; // count of wchar_t s in the buffer.
 } buffer_t;
 
-static inline buffer_t GenerateRawASCIIBuffer(_In_ const WinBMP* const restrict image) {
-    if (image->infhead.biWidth > 140) {
-        fwprintf_s(
-            stderr,
-            L"Error in %s @ line %d: BMP image too large!. Use GenerateDownScaledASCIIBuffer() instead, which implements image downscaling.\n",
-            __FUNCTIONW__,
-            __LINE__
-        );
-        return (buffer_t) { NULL, 0 };
-    }
-
+static inline buffer_t GenerateASCIIBuffer_Raw(_In_ const WinBMP* const restrict image) {
+    
     const size_t   npixels = (size_t) image->infhead.biHeight * image->infhead.biWidth;
     const size_t   nwchars = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
 
@@ -75,7 +82,7 @@ static inline buffer_t GenerateRawASCIIBuffer(_In_ const WinBMP* const restrict 
         for (int64_t nrows = image->infhead.biHeight - 1LL; nrows >= 0; --nrows) {
             // traverse left to right inside "scan lines"
             for (int64_t ncols = 0; ncols < image->infhead.biWidth; ncols++)
-                txtbuff[caret++] = ScaleRgbQuad(&image->pixel_buffer[(nrows * image->infhead.biWidth) + ncols]);
+                txtbuff[caret++] = __ScaleRgbQuadAVG(&image->pixel_buffer[(nrows * image->infhead.biWidth) + ncols]);
 
             txtbuff[caret++] = L'\n';
             txtbuff[caret++] = L'\r';
@@ -90,7 +97,7 @@ static inline buffer_t GenerateRawASCIIBuffer(_In_ const WinBMP* const restrict 
 // The total downscaling is completely predicated only on the image width, and the proportionate scaling effects will automatically apply to
 // the image height.
 
-static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const restrict image) {
+static inline buffer_t GenerateASCIIBuffer_DownScaled(_In_ const WinBMP* const restrict image) {
     // downscaling needs to be done in pixel blocks.
     const size_t block_w   = (size_t) ceill(image->infhead.biWidth / 140.0L);
     const size_t block_h   = (size_t) ceill(image->infhead.biHeight / 140.0L);
@@ -144,10 +151,10 @@ static inline buffer_t GenerateDownScaledASCIIBuffer(_In_ const WinBMP* const re
     return (buffer_t) { txtbuff, caret };
 }
 
-// a wrapper for GenerateRawASCIIBuffer and GenerateDownScaledASCIIBuffer
+// a context dependent dispatcher for GenerateRawASCIIBuffer and GenerateDownScaledASCIIBuffer
 static __forceinline buffer_t __stdcall GenerateASCIIBuffer(_In_ const WinBMP* const restrict image) {
-    if (image->infhead.biWidth < 140) return GenerateRawASCIIBuffer(image);
-    return GenerateDownScaledASCIIBuffer(image);
+    if (image->infhead.biWidth < 140) return GenerateASCIIBuffer_Raw(image);
+    return GenerateASCIIBuffer_DownScaled(image);
 }
 
 #endif // !__ASCII_H_
