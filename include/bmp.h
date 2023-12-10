@@ -4,6 +4,7 @@
 
     #define WIN32_LEAN_AND_MEAN
     #define WIN32_EXTRA_MEAN
+    #define NOMINMAX
     #include <assert.h>
     #include <math.h>
     #include <stdint.h>
@@ -108,7 +109,7 @@ static inline BITMAPINFOHEADER __ParseBitmapInfoHeader(_In_ const uint8_t* const
 }
 
     // A struct representing a BMP image.
-    #pragma pack(push, 4)
+    #pragma pack(push, 8)
 typedef struct _WinBMP {
         size_t           fsize;
         size_t           npixels;
@@ -135,7 +136,7 @@ static inline WinBMP NewBmpImage(
     const BITMAPFILEHEADER fh     = __ParseBitmapFileHeader(imstream, size);
     const BITMAPINFOHEADER infh   = __ParseBitmapInfoHeader(imstream, size);
 
-    uint8_t* const         buffer = malloc(size - 54);
+    RGBQUAD* const         buffer = malloc(size - 54);
     if (buffer) {
         memcpy_s(buffer, size - 54, imstream + 54, size - 54);
     } else {
