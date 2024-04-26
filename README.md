@@ -8,7 +8,6 @@
 
 <div><img src="./readme/bulb_.jpg" height=500 width=400> <img src="./readme/bulb.jpg" height=500 width=400></div><br>
 <div><img src="./readme/candle_.jpg" height=500 width=400> <img src="./readme/candle.jpg" height=500 width=400></div><br>
-<div><img src="./readme/natalie_.jpg" height=500 width=400> <img src="./readme/natalie.jpg" height=500 width=400></div><br>
 <div><img src="./readme/wineglass_.jpg" height=500 width=400> <img src="./readme/wineglass.jpg" height=500 width=400></div><br>
 <div><img src="./readme/vendetta_.jpg" height=500 width=400> <img src="./readme/vendetta.jpg" height=500 width=400></div><br>
 
