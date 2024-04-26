@@ -1,7 +1,7 @@
 # ___`A minimal ASCII art generator`___
 
 ---------------
-### ___Prints out the ASCII text representation of a `Windows BMP` image file___
+### ___Prints out the ASCII text representation of a `Windows BMP` image files___
 -------------
 
 #### ___Examples___
