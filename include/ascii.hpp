@@ -22,38 +22,42 @@ namespace bmp {
 
     namespace mappers {
 
-        // a functor giving back the weighted average of an RGB pixel values
-        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct weighted_average final {
+        // a functor giving back the arithmetic average of an RGB pixel values
+        template<typename T = unsigned> requires std::is_unsigned_v<T>
+        struct arithmetic_average { // also doubles as the base class for other functors
                 using value_type = T;
                 constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
+                    return static_cast<T>(
+                        (/* we don't want overflows and truncations here */ static_cast<double>(pixel.rgbBlue) + pixel.rgbGreen +
+                         pixel.rgbRed) /
+                        3.000L
+                    );
+                }
+        };
+
+        // a functor giving back the weighted average of an RGB pixel values
+        template<typename T = unsigned> struct weighted_average final : public arithmetic_average<T> {
+                constexpr arithmetic_average<T>::value_type operator()(const RGBQUAD& pixel) const noexcept {
                     return static_cast<T>(pixel.rgbBlue * 0.299L + pixel.rgbGreen * 0.587L + pixel.rgbRed * 0.114L);
                 }
         };
 
-        // a functor giving back the arithmetic average of an RGB pixel values
-        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct arithmetic_average final {
-                using value_type = T;
-                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
-                    return static_cast<T>((pixel.rgbBlue + pixel.rgbGreen + pixel.rgbRed) / 3.000L);
-                }
-        };
-
         // a functor giving back the average of minimum and maximum RGB values in a pixel
-        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct minmax_average final {
-                using value_type = T;
-                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
+        template<typename T = unsigned> struct minmax_average final : public arithmetic_average<T> {
+                constexpr arithmetic_average<T>::value_type operator()(const RGBQUAD& pixel) const noexcept {
                     return static_cast<T>(
-                        (std::min(pixel.rgbBlue + pixel.rgbGreen + pixel.rgbRed) + std::max(pixel.rgbBlue + pixel.rgbGreen + pixel.rgbRed)
-                        ) /
-                        2
+                        (/* we don't want overflows and truncations here */ static_cast<double>(
+                             std::min({ pixel.rgbBlue, pixel.rgbGreen, pixel.rgbRed })
+                         ) +
+                         std::max({ pixel.rgbBlue, pixel.rgbGreen, pixel.rgbRed })) /
+                        2.0000L
                     );
                 }
         };
 
         // a functor giving back the luminosity of an RGB pixel
-        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct luminosity final {
-                using value_type = T;
-                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
+        template<typename T = unsigned> struct luminosity final : public arithmetic_average<T> {
+                constexpr arithmetic_average<T>::value_type operator()(const RGBQUAD& pixel) const noexcept {
                     return static_cast<T>(pixel.rgbBlue * 0.2126L + pixel.rgbGreen * 0.7152L + pixel.rgbRed * 0.0722L);
                 }
         };
@@ -83,25 +87,27 @@ namespace bmp {
                 constexpr colormap(colormap&& other) noexcept :
                     _rgbscaler(std::move(other.scaler)), _palette(std::move(other.palette)), _palette_len(_palette.size()) { }
 
-                colormap& operator=(const colormap& other) = delete; // no copy assignment operator
+                constexpr colormap& operator=(const colormap& other) noexcept {
+                    if (this == &other) return *this;
+                }
 
-                colormap operator=(colormap&& other)       = delete; // no move assignment operator
+                constexpr colormap& operator=(colormap&& other) noexcept { }
 
-                ~colormap()                                = default;
+                constexpr ~colormap() = default;
 
                 constexpr value_type operator()(const RGBQUAD& pixel) const noexcept { return _palette[_rgbscaler(pixel) % _palette_len]; }
         };
 
     } // namespace mappers
 
-    [[nodiscard]] static constexpr buffer_t GenerateASCIIRawBuffer(_In_ const WinBMP* const image) {
+    [[nodiscard]] static constexpr buffer_t GenerateASCIIRawBuffer(_In_ const bmp* const image) {
         const size_t npixels   = (size_t) image->infhead.biHeight * image->infhead.biWidth;
         const size_t nwchars   = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
 
         wchar_t* const txtbuff = malloc(nwchars * sizeof(wchar_t));
         if (!txtbuff) {
             fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
-            return (buffer_t) { NULL, 0 };
+            return (buffer_t) { nullptr, 0 };
         }
 
         // clang-format off
@@ -151,7 +157,7 @@ namespace bmp {
     // chars) The total downscaling is completely predicated only on the image width, and the proportionate scaling effects will
     // automatically apply to the image height.
 
-    static inline buffer_t GenerateASCIIDownScaledBuffer(_In_ const WinBMP* const image) {
+    static inline buffer_t GenerateASCIIDownScaledBuffer(_In_ const bmp* const image) {
         // downscaling needs to be done in pixel blocks.
         // each block will be represented by a single wchar_t
         const size_t block_s   = ceill(image->infhead.biWidth / 140.0L);
@@ -164,7 +170,7 @@ namespace bmp {
         wchar_t* const txtbuff = malloc(nwchars * sizeof(wchar_t));
         if (!txtbuff) {
             fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
-            return (buffer_t) { NULL, 0 };
+            return (buffer_t) { nullptr, 0 };
         }
 
         long double avg_B = 0.0, avg_G = 0.0, avg_R = 0.0;
@@ -227,7 +233,7 @@ namespace bmp {
     }
 
     // a context dependent dispatcher for GenerateRawASCIIBuffer and GenerateDownScaledASCIIBuffer
-    static __forceinline buffer_t __stdcall GenerateASCIIBuffer(_In_ const WinBMP* const image) {
+    static __forceinline buffer_t __stdcall GenerateASCIIBuffer(_In_ const bmp* const image) {
         return (image->infhead.biWidth <= 140) ? GenerateASCIIRawBuffer(image) : GenerateASCIIDownScaledBuffer(image);
     }
 

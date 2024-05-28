@@ -11,8 +11,8 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
     for (size_t i = 1; i < argc; ++i) {
         const uint8_t* const buffer = OpenImage(argv[i], &fsize);
 
-        if (buffer) { // NewBmpImage will also NULL check the buffer
-            const WinBMP image = NewBmpImage(buffer, fsize);
+        if (buffer) { // NewBmpImage will also nullptr check the buffer
+            const bmp image = NewBmpImage(buffer, fsize);
 
             if (image.pixel_buffer) {
                 // BmpInfo(&image);
