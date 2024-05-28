@@ -1,0 +1,21 @@
+CompileFlags:
+  Add: [-Wall, -Wextra, -pedantic, -O0, -std=c++23, -c]
+  Compiler:  clang++.exe
+  CompilationDatabase: None
+
+Completion:
+  AllScopes: Yes
+
+Index:
+  Background: Skip
+
+InlayHints:
+  BlockEnd: Yes
+  Designators: Yes
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
+  TypeNameLimit: 24
+
+Hover:
+  ShowAKA: Yes

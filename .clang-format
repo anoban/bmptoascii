@@ -6,7 +6,7 @@
 
 # Clang-format understands also special comments that switch formatting in a delimited range.
 # The code between a comment // clang-format off or /* clang-format off */ up to a comment // clang-format on
-# or /* clang-format on */ will not be formatted. 
+# or /* clang-format on */ will not be formatted.
 # The comments themselves will be formatted (aligned) normally. Also, a colon (:) and additional text may follow
 # // clang-format off or // clang-format on to explain why clang-format is turned off or back on.
 
@@ -23,7 +23,7 @@ AlignAfterOpenBracket: BlockIndent   # If true, horizontally aligns arguments af
               # someLongFunction(
               #     argument1, argument2
               # )
-              
+
 AlignArrayOfStructures: Right        # Align array column and right justify the columns e.g.:
                                      #   struct test demo[] =
                                      #   {
@@ -39,79 +39,79 @@ AlignConsecutiveAssignments:
   #define EVEN_LONGER_NAME (2)
   #define foo(x)           (x * x)
   #define bar(y, z)        (y + z)
-  
+
   # int a            = 1;
   # int somelongname = 2;
   # double c         = 3;
-  # 
+  #
   # int aaaa : 1;
   # int b    : 12;
   # int ccc  : 8;
-  # 
+  #
   # int         aaaa = 12;
   # float       b = 23;
   # std::string ccc;
-  
+
   AcrossEmptyLines: true
   # if set to true;
   # int a            = 1;
   # int somelongname = 2;
   # double c         = 3;
-  # 
+  #
   # int d            = 3;
-  
+
   # if set to false;
   # int a            = 1;
   # int somelongname = 2;
   # double c         = 3;
-  # 
+  #
   # int d = 3;
-  
+
   AcrossComments:  true
   # if set to true;
   # int d    = 3;
   # /* A comment. */
   # double e = 4;
-   
+
   # if set to false;
   # int d = 3;
   # /* A comment. */
   # double e = 4;
-  
+
   AlignCompound:   true
   # if set to true;
   # a   += 2;
   # bbb  = 2;
-  
+
   # if set to false;
   # a += 2;
   # bbb = 2;
-  
+
   PadOperators:    true
   # if set to true;
   # a   >>= 2;
   # bbb   = 2;
-  # 
+  #
   # a     = 2;
   # bbb >>= 2;
-  
+
   # if set to false;
   # a >>= 2;
   # bbb = 2;
-  # 
+  #
   # a     = 2;
   # bbb >>= 2;
-  
+
 AlignConsecutiveBitFields:      # Same as `AlignConsecutiveAssignments`, but for bitfields.
   Enabled:         true
   AcrossEmptyLines: true
   AcrossComments:  true
   AlignCompound:   true
   PadOperators:    true
-  
+
 AlignConsecutiveDeclarations:   # Same as `AlignConsecutiveAssignments`, but for declarations.
   Enabled:         true
-  AcrossEmptyLines: true
+  AcrossEmptyLines: false
   AcrossComments:  true
   AlignCompound:   true
   PadOperators:    true
@@ -131,14 +131,14 @@ AlignConsecutiveShortCaseStatements:
   # case log::warning: return "warning:";
   # default:           return "";
   # }
-  
+
   # if set to false;
   # switch (level) {
   # case log::info: return "info:";
   # case log::warning: return "warning:";
   # default: return "";
   # }
-  
+
   AcrossEmptyLines: true
   AcrossComments:  true
   AlignCaseColons: true
@@ -148,7 +148,7 @@ AlignConsecutiveShortCaseStatements:
   # case log::warning: return "warning:";
   # default          : return "";
   # }
-  
+
   # if set to false;
   # switch (level) {
   # case log::info:    return "info:";
@@ -160,18 +160,18 @@ AlignEscapedNewlines: Right     # #define A                               \
                                 # int aaaa;                               \
                                 # int b;                                  \
                                 # int dddddddddd;
-  
+
 AlignOperands:   Align          # int aaa = bbbbbbbbbbbbbbb +
                                 #           ccccccccccccccc;
-          
+
 AlignTrailingComments:
   Kind:            Always
-  OverEmptyLines:  5
+  OverEmptyLines:  0
 # int a;      // all these
-# 
+#
 # int ab;     // comments are
-# 
-# 
+#
+#
 # int abcdef; // aligned
 
 AllowAllArgumentsOnNextLine: true     # If a function call or braced initializer list doesn't fit on a line, allow putting ALL arguments
@@ -179,19 +179,19 @@ AllowAllArgumentsOnNextLine: true     # If a function call or braced initializer
   # if set to true;
   # callFunction(
   #     a, b, c, d);
-   
+
   # if set to false;
   # callFunction(a,
   #              b,
   #              c,
   #              d);
-  
+
 AllowAllParametersOfDeclarationOnNextLine: true  # If the function declaration doesn't fit on a line, allow putting ALL parameters of a
                                                  # function declaration onto the next line even if BinPackParameters is false.
   # if set to true;
   # void myFunction(
   #     int a, int b, int c, int d, int e);
-  
+
   # if set to false;
   # void myFunction(int a,
   #                 int b,
@@ -294,7 +294,7 @@ AlwaysBreakTemplateDeclarations: MultiLine # Force break after template declarat
 
 AttributeMacros:
   - __capability
-  
+
 BinPackArguments: false         # If false, a function call's arguments will either be all on the same line or will have one line each.
 
 BinPackParameters: false        # If false, a function declaration's or function definition''s parameters will either all be on the same
@@ -318,34 +318,34 @@ BraceWrapping:
   # }                                         plop();
   #                                         }
   #                                       }
-  
+
   AfterClass:      false
   AfterControlStatement: Never     # Wrap control statements (if/for/while/switch/..).
   AfterEnum:       false
-  
+
   AfterExternBlock: false
   # if set to true;
   # extern "C"
   # {
   #   int foo();
   # }
-   
+
   # if set to false;
   # extern "C" {
   # int foo();
   # }
-  
-  AfterFunction:   false 
+
+  AfterFunction:   false
   AfterNamespace:  false
 
   # Wrap ObjC definitions (interfaces, implementations…). That's for Objective-C!
   # AfterObjCDeclaration: false
-  
+
   AfterStruct:     false
   AfterUnion:      false
   BeforeCatch:     false
   BeforeElse:      false
-  
+
   BeforeLambdaBody: false
   # if set to true;
   # connect(
@@ -354,28 +354,28 @@ BraceWrapping:
   #     foo();
   #     bar();
   #   });
-   
+
   # if set to false;
   # connect([]() {
   #   foo();
   #   bar();
   # });
-  
+
   BeforeWhile:     false        # Wrap the while statement of a do while loop.
   IndentBraces:    false        # If set to true, unnecessarily indents conditional statements with multiline bodies. Yikes!
-  
+
   SplitEmptyFunction: false     # If false, empty function body can be put on a single line. This option is used only if the opening brace
                                 # of the function has already been wrapped
   # if set to false;    if set to true;
   # int f()   vs.       int f()
   # {}                  {
-  #                     }                              
-                                
+  #                     }
+
   SplitEmptyRecord: false       # If false, empty record (e.g. class, struct or union) body can be put on a single line.
                                 # This option is used only if the opening brace of the record has already been wrapped
-                                
+
   SplitEmptyNamespace: false    # If false, empty namespace body can be put on a single line. This option is used only if
-                                # the opening brace of the namespace has already been wrapped 
+                                # the opening brace of the namespace has already been wrapped
 
 BreakAfterAttributes: Never     # Break after a group of C++11 attributes before a function declaration/definition name.
 # If set to Never;
@@ -413,7 +413,7 @@ BreakBeforeTernaryOperators: false        # If true, ternary operators will be p
 # veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription
 #     ? firstValue
 #     : SecondValueVeryVeryVeryVeryLong;
-# 
+#
 # if set to false;
 # veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription ?
 #     firstValue :
@@ -443,14 +443,14 @@ BreakStringLiterals: false
 
 ColumnLimit:    140          # A column limit of 0 means that there is no column limit. In this case, clang-format will respect
                              # the input's line breaking decisions within statements unless they contradict other rules.
-                             
+
 CommentPragmas:  '^ IWYU pragma:'     # A regular expression that describes comments with special meaning, which should not be split into lines or otherwise changed.
 
 CompactNamespaces: false              # If true, consecutive namespace declarations will be on the same line. If false, each namespace is declared on a new line.
 # if set to true;
 # namespace Foo { namespace Bar {
 # }}
- 
+
 # if set to false;
 # namespace Foo {
 # namespace Bar {
@@ -475,13 +475,13 @@ Cpp11BracedListStyle: false
 # f(MyMap[{composite, key}]);            f(MyMap[{ composite, key }]);
 # new int[3]{1, 2, 3};                   new int[3]{ 1, 2, 3 };
 
-DerivePointerAlignment: false            # If true, analyze the formatted file for the most common alignment of & and *. 
+DerivePointerAlignment: false            # If true, analyze the formatted file for the most common alignment of & and *.
                                          # Pointer and reference alignment styles are going to be updated according to the preferences found
                                          # in the file. PointerAlignment is then used only as fallback.
 
 DisableFormat:   false                   # Disables formatting completely.
 
-EmptyLineAfterAccessModifier: Never     # Defines when to put an empty line after access modifiers. EmptyLineBeforeAccessModifier configuration 
+EmptyLineAfterAccessModifier: Never     # Defines when to put an empty line after access modifiers. EmptyLineBeforeAccessModifier configuration
                                         # handles the number of empty lines between two access modifiers.
 # If set to Never; removes all empty lines after access modifiers.
 # struct foo {
@@ -501,16 +501,16 @@ EmptyLineBeforeAccessModifier: Always
 # struct foo {
 # private:
 #   int i;
-# 
+#
 # protected:
 #   int j;
 #   /* comment */
-# 
+#
 # public:
 #   foo() {}
-# 
+#
 # private:
-# 
+#
 # protected:
 # };
 
@@ -551,22 +551,22 @@ IncludeCategories:
 # The value of Priority defines the order of #include blocks and also allows the grouping of #includes of different priority.
 # The smaller the `Priority` value, the upper that group will be rearranged in the source file!
 # SortPriority is set to the value of Priority as default if it is not assigned.
-  
+
   - Regex:           '^(<([0-9a-zA-Z\_\-]+)>)$'                   # C++ headers in the <header> form (intending to target STL headers)
     Priority:        -2
     SortPriority:    0
     CaseSensitive:   false
-    
+
   - Regex:           '^(<([0-9a-zA-Z\_\-]+)\.h>)$'                # C headers in the <header.h> form (intending to target C stdlib headers)
     Priority:        -1
     SortPriority:    0
     CaseSensitive:   false
-    
+
   - Regex:           '^(\"([0-9a-zA-Z\_\-]+)\.hpp\")$'            # C++ headers in the "header.hpp" form
     Priority:        0
     SortPriority:    0
     CaseSensitive:   false
-    
+
   - Regex:           '^(\"([0-9a-zA-Z\_\-]+)\.h\")$'              # C headers in the format "header.h"
     Priority:        0
     SortPriority:    0
@@ -669,9 +669,9 @@ IndentWrappedFunctionNames: false      # Indent if a function definition or decl
 # LoooooooooooooooooooooooooooooooooooooooongReturnType
 # LoooooooooooooooooooooooooooooooongFunctionDeclaration();
 
-InsertBraces:    false                 # Insert braces after control statements (if, else, for, do, and while) in C++ unless the control  
+InsertBraces:    false                 # Insert braces after control statements (if, else, for, do, and while) in C++ unless the control
                                        # statements are inside macro definitions or the braces would enclose preprocessor directives.
-                                       
+
 InsertNewlineAtEOF: false
 
 InsertTrailingCommas: None             # insert trailing commas in container literals (arrays and objects) that wrap across multiple lines.
@@ -718,7 +718,7 @@ LambdaBodyIndentation: Signature       # The indentation style of lambda bodies.
 # someMethod(
 #     [](SomeReallyLongLambdaSignatureArgument foo) {
 #   return;
-# }); 
+# });
 # someMethod(someOtherMethod(
 #     [](SomeReallyLongLambdaSignatureArgument foo) {
 #   return;
@@ -748,7 +748,7 @@ PackConstructorInitializers: NextLine
 
 # Constructor()
 #     : aaaaaaaaaaaaaaaaaaaa(), bbbbbbbbbbbbbbbbbbbb(), ddddddddddddd()
- 
+
 # Constructor()
 #     : aaaaaaaaaaaaaaaaaaaa(),
 #       bbbbbbbbbbbbbbbbbbbb(),
@@ -766,17 +766,17 @@ PenaltyIndentedWhitespace: 0
 PenaltyReturnTypeOnItsOwnLine: 1000000
 
 PointerAlignment: Left
-PPIndentWidth:   -1                      # The number of columns to use for indentation of preprocessor statements. 
+PPIndentWidth:   -1                      # The number of columns to use for indentation of preprocessor statements.
                                          # When set to -1 (default) IndentWidth is used also for preprocessor statements.
-                                         
+
 QualifierAlignment: Leave                # Different ways to arrange specifiers and qualifiers (e.g. const/volatile).
-# QualifierOrder: ['const', 'type', 'static', 'constexpr', 'inline']     
+# QualifierOrder: ['const', 'type', 'static', 'constexpr', 'inline']
 # Items to the left of 'type' will be placed to the left of the type and aligned in the order supplied. Items to the right of 'type'
 # will be placed to the right of the type and aligned in the order supplied.
 
 ReferenceAlignment: Left                 # Reference alignment style (overrides PointerAlignment for references).
 
-ReflowComments:  true                    # If true, clang-format will attempt to re-flow comments.
+ReflowComments:  false                    # If true, clang-format will attempt to re-flow comments.
 # If set to false;
 # // veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of information
 # /* second veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of information */
@@ -804,54 +804,54 @@ RemoveSemicolon: false                  # Remove semicolons after the closing br
 
 RequiresClausePosition: SingleLine
 # If set to WithPreceding;
-# Try to put the clause together with the preceding part of a declaration. 
+# Try to put the clause together with the preceding part of a declaration.
 # For class templates: stick to the template declaration. For function templates: stick to the template declaration.
 # For function declaration followed by a requires clause: stick to the parameter list.
 
 # template <typename T> requires C<T>
 # struct Foo {...
- 
+
 # template <typename T> requires C<T>
 # void bar(T t) {...
- 
+
 # template <typename T>
 # void baz(T t) requires C<T>
 # {...
- 
+
 # If set to WithFollowing;
 # Try to put the requires clause together with the class or function declaration.
 
 # template <typename T>
 # requires C<T> struct Foo {...
- 
+
 # template <typename T>
 # requires C<T> void bar(T t) {...
- 
+
 # template <typename T>
 # void baz(T t)
 # requires C<T> {...
 
 # If set to SingleLine;
 # Try to put everything in the same line if possible. Otherwise normal line breaking rules take over.
- 
+
 # // Fitting:
 # template <typename T> requires C<T> struct Foo {...
 # template <typename T> requires C<T> void bar(T t) {...
 # template <typename T> void bar(T t) requires C<T> {...
- 
+
 # // Not fitting, one possible example:
 # template <typename LongName>
 # requires C<LongName>
 # struct Foo {...
- 
+
 # template <typename LongName>
 # requires C<LongName>
 # void bar(LongName ln) {
- 
+
 # template <typename LongName>
 # void bar(LongName ln)
 #     requires C<LongName> {
- 
+
 RequiresExpressionIndentation: OuterScope
 
 SeparateDefinitionBlocks: Leave               # Specifies the use of empty lines to separate definition blocks, including classes, structs,
@@ -908,7 +908,7 @@ SpaceBeforeParensOptions:
   AfterRequiresInClause: false
   AfterRequiresInExpression: false
   BeforeNonEmptyParentheses: false
-  
+
 SpaceBeforeRangeBasedForLoopColon: true
 
 SpaceBeforeSquareBrackets: false
@@ -924,7 +924,7 @@ SpacesInContainerLiterals: true
 SpacesInLineCommentPrefix:
   Minimum:         1
   Maximum:         -1
-  
+
 SpacesInParens:  Custom
 
 SpacesInParensOptions:
@@ -932,7 +932,7 @@ SpacesInParensOptions:
   InConditionalStatements: false
   InEmptyParentheses: false
   Other:           false
-  
+
 SpacesInSquareBrackets: false
 Standard:        c++20
 
