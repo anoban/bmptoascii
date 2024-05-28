@@ -100,14 +100,15 @@ namespace bmp {
 
     } // namespace mappers
 
-    [[nodiscard]] static constexpr buffer_t GenerateASCIIRawBuffer(_In_ const bmp* const image) {
-        const size_t npixels   = (size_t) image->infhead.biHeight * image->infhead.biWidth;
-        const size_t nwchars   = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
+    template<typename T> [[nodiscard("Expensive")]] static inline std::wstring GenerateASCIIRawBuffer(_In_ const bmp<T>& image) {
+        const size_t npixels = (size_t) image->infhead.biHeight * image->infhead.biWidth;
+        const size_t nwchars = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
 
-        wchar_t* const txtbuff = malloc(nwchars * sizeof(wchar_t));
-        if (!txtbuff) {
+        std::wstring buffer {};
+        buffer.resize(nwchars * sizeof(wchar_t));
+        if (buffer.empty()) {
             fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
-            return (buffer_t) { nullptr, 0 };
+            return buffer;
         }
 
         // clang-format off
@@ -129,10 +130,10 @@ namespace bmp {
         if (image->infhead.biHeight < 0) {
             for (int64_t nrows = 0; nrows < image->infhead.biHeight; ++nrows) {
                 for (int64_t ncols = 0; ncols < image->infhead.biWidth; ++ncols)
-                    txtbuff[caret++] = __ScaleRgbQuadWAVG(&image->pixel_buffer[nrows * image->infhead.biWidth + ncols]);
+                    buffer[caret++] = __ScaleRgbQuadWAVG(&image->pixel_buffer[nrows * image->infhead.biWidth + ncols]);
 
-                txtbuff[caret++] = L'\n';
-                txtbuff[caret++] = L'\r';
+                buffer[caret++] = L'\n';
+                buffer[caret++] = L'\r';
             }
         }
 
@@ -142,22 +143,22 @@ namespace bmp {
             for (int64_t nrows = image->infhead.biHeight - 1LL; nrows >= 0; --nrows) {
                 // traverse left to right inside "scan lines"
                 for (int64_t ncols = 0; ncols < image->infhead.biWidth; ++ncols)
-                    txtbuff[caret++] = __ScaleRgbQuadWAVG(&image->pixel_buffer[nrows * image->infhead.biWidth + ncols]);
+                    buffer[caret++] = __ScaleRgbQuadWAVG(&image->pixel_buffer[nrows * image->infhead.biWidth + ncols]);
 
-                txtbuff[caret++] = L'\n';
-                txtbuff[caret++] = L'\r';
+                buffer[caret++] = L'\n';
+                buffer[caret++] = L'\r';
             }
         }
 
         assert(caret == nwchars);
-        return (buffer_t) { txtbuff, caret };
+        return (buffer_t) { buffer, caret };
     }
 
     // Generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width. (140
     // chars) The total downscaling is completely predicated only on the image width, and the proportionate scaling effects will
     // automatically apply to the image height.
 
-    static inline buffer_t GenerateASCIIDownScaledBuffer(_In_ const bmp* const image) {
+    template<typename T> static inline std::wstring GenerateASCIIDownScaledBuffer(_In_ const bmp<T>& image) {
         // downscaling needs to be done in pixel blocks.
         // each block will be represented by a single wchar_t
         const size_t block_s   = ceill(image->infhead.biWidth / 140.0L);
@@ -166,11 +167,13 @@ namespace bmp {
         // We'd have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent
         // that block as a wchar_t. one wchar_t in our buffer will have to represent (block_w x block_h) number of RGBQUADs
 
-        const size_t   nwchars = 142 /* 140 wchar_ts + CRLF */ * ceill(image->infhead.biHeight / (long double) block_s);
-        wchar_t* const txtbuff = malloc(nwchars * sizeof(wchar_t));
-        if (!txtbuff) {
+        const size_t nwchars   = 142 /* 140 wchar_ts + CRLF */ * std::ceill(image->infhead.biHeight / (long double) block_s);
+        std::wstring buffer {};
+        buffer.resize(nwchars * sizeof(wchar_t));
+
+        if (buffer.empty()) {
             fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
-            return (buffer_t) { nullptr, 0 };
+            return buffer;
         }
 
         long double avg_B = 0.0, avg_G = 0.0, avg_R = 0.0;
@@ -190,16 +193,16 @@ namespace bmp {
                         }
                     }
 
-                    avg_B            /= block_dim;
-                    avg_G            /= block_dim;
-                    avg_R            /= block_dim;
+                    avg_B           /= block_dim;
+                    avg_G           /= block_dim;
+                    avg_R           /= block_dim;
                     // pixel->rgbBlue * 0.299L + pixel->rgbGreen * 0.587L + pixel->rgbRed * 0.114L
-                    txtbuff[caret++]  = char_array[(size_t) (avg_B * 0.299L + avg_G * 0.587L + avg_R * 0.114L) % __crt_countof(char_array)];
+                    buffer[caret++]  = char_array[(size_t) (avg_B * 0.299L + avg_G * 0.587L + avg_R * 0.114L) % __crt_countof(char_array)];
                     avg_B = avg_G = avg_R = 0.0L;
                 }
 
-                txtbuff[caret++] = L'\n';
-                txtbuff[caret++] = L'\r';
+                buffer[caret++] = L'\n';
+                buffer[caret++] = L'\r';
             }
         } else {
             for (int64_t nrows  = image->infhead.biHeight - 1LLU; nrows >= 0;
@@ -216,20 +219,20 @@ namespace bmp {
                         }
                     }
 
-                    avg_B            /= block_dim;
-                    avg_G            /= block_dim;
-                    avg_R            /= block_dim;
-                    txtbuff[caret++]  = char_array[(size_t) ((avg_B + avg_G + avg_R) / 3) % __crt_countof(char_array)];
+                    avg_B           /= block_dim;
+                    avg_G           /= block_dim;
+                    avg_R           /= block_dim;
+                    buffer[caret++]  = char_array[(size_t) ((avg_B + avg_G + avg_R) / 3) % __crt_countof(char_array)];
                     avg_B = avg_G = avg_R = 0.0L;
                 }
 
-                txtbuff[caret++] = L'\n';
-                txtbuff[caret++] = L'\r';
+                buffer[caret++] = L'\n';
+                buffer[caret++] = L'\r';
             }
         }
         // wprintf_s(L"caret %5zu, nwchars %5zu\n", caret, nwchars);
         // assert(caret == nwchars); not likely :(
-        return (buffer_t) { txtbuff, caret };
+        return (buffer_t) { buffer, caret };
     }
 
     // a context dependent dispatcher for GenerateRawASCIIBuffer and GenerateDownScaledASCIIBuffer

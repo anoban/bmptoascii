@@ -4,7 +4,7 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
     uint64_t fsize = 0;
 
     if (argc < 2) {
-        fputws(L"Not enough arguments: main.exe expects one or more paths to .BMP files", stderr);
+        ::fputws(L"Not enough arguments: main.exe expects one or more paths to .BMP files", stderr);
         return EXIT_FAILURE;
     }
 
