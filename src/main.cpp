@@ -1,4 +1,4 @@
-#include <ascii.h>
+#include <ascii.hpp>
 
 int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
     uint64_t fsize = 0;

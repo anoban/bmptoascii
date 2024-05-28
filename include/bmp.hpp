@@ -1,18 +1,17 @@
 #pragma once
-#ifndef __BMP_H_
-    #define __BMP_H_
 
-    #define WIN32_LEAN_AND_MEAN
-    #define WIN32_EXTRA_MEAN
-    #define NOMINMAX
-    #include <assert.h>
-    #include <math.h>
-    #include <stdint.h>
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <Windows.h>
+#define WIN32_LEAN_AND_MEAN
+#define WIN32_EXTRA_MEAN
+#define NOMINMAX
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 
-static inline uint8_t* OpenImage(_In_ const wchar_t* const restrict file_name, _Out_ uint64_t* const nread_bytes) {
+#include <Windows.h>
+
+static inline uint8_t* OpenImage(_In_ const wchar_t* const file_name, _Out_ uint64_t* const nread_bytes) {
     *nread_bytes = 0;
     void *handle = NULL, *buffer = NULL;
     DWORD nbytes = 0;
@@ -52,7 +51,7 @@ static inline uint8_t* OpenImage(_In_ const wchar_t* const restrict file_name, _
     }
 }
 
-static inline BITMAPFILEHEADER __ParseBitmapFileHeader(_In_ const uint8_t* restrict imstream, _In_ const uint64_t fsize) {
+static inline BITMAPFILEHEADER __ParseBitmapFileHeader(_In_ const uint8_t* imstream, _In_ const uint64_t fsize) {
     static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "Error: BITMAPFILEHEADER is not 14 bytes in size.");
     assert(fsize >= sizeof(BITMAPFILEHEADER));
 
@@ -70,7 +69,7 @@ static inline BITMAPFILEHEADER __ParseBitmapFileHeader(_In_ const uint8_t* restr
     return header;
 }
 
-static inline BITMAPINFOHEADER __ParseBitmapInfoHeader(_In_ const uint8_t* const restrict imstream, _In_ const uint64_t fsize) {
+static inline BITMAPINFOHEADER __ParseBitmapInfoHeader(_In_ const uint8_t* const imstream, _In_ const uint64_t fsize) {
     static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "Error: BITMAPINFOHEADER is not 40 bytes in size");
     assert(fsize >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
 
@@ -108,8 +107,8 @@ static inline BITMAPINFOHEADER __ParseBitmapInfoHeader(_In_ const uint8_t* const
     return header;
 }
 
-    // A struct representing a BMP image.
-    #pragma pack(push, 8)
+// A struct representing a BMP image.
+#pragma pack(push, 8)
 typedef struct _WinBMP {
         size_t           fsize;
         size_t           npixels;
@@ -117,11 +116,9 @@ typedef struct _WinBMP {
         BITMAPINFOHEADER infhead;
         RGBQUAD*         pixel_buffer;
 } WinBMP;
-    #pragma pack(pop)
+#pragma pack(pop)
 
-static inline WinBMP NewBmpImage(
-    _In_ const uint8_t* const restrict imstream /* will be freed by this procedure */, _In_ const size_t size
-) {
+static inline WinBMP NewBmpImage(_In_ const uint8_t* const imstream /* will be freed by this procedure */, _In_ const size_t size) {
     WinBMP image = {
         .fsize = 0, .npixels = 0, .fhead = { 0, 0, 0, 0, 0 },
                 .infhead = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -147,7 +144,7 @@ static inline WinBMP NewBmpImage(
     return (WinBMP) { .fsize = size, .npixels = (size - 54) / 4, .fhead = fh, .infhead = infh, .pixel_buffer = buffer };
 }
 
-static inline void BmpInfo(_In_ const WinBMP* const restrict image) {
+static inline void BmpInfo(_In_ const WinBMP* const image) {
     wprintf_s(
         L"\nFile size %Lf MiBs\nPixel data start offset: %d\n"
         L"BITMAPINFOHEADER size: %u\nImage width: %u\nImage height: %d\nNumber of planes: %hu\n"
@@ -184,5 +181,3 @@ static inline void BmpInfo(_In_ const WinBMP* const restrict image) {
 
     return;
 }
-
-#endif // !__BMP_H_

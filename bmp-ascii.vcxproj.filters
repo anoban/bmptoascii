@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.c">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\ascii.h">
+    <ClInclude Include="include\ascii.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\bmp.h">
+    <ClInclude Include="include\bmp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

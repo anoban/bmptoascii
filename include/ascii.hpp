@@ -1,31 +1,30 @@
 #pragma once
-#ifndef __ASCII_H_
-    #define __ASCII_H_
-    #include <bmp.h>
+
+#include <bmp.hpp>
 
 // ASCII characters in ascending order of luminance
-static const wchar_t wascii[]     = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
-                                      L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
+static constexpr wchar_t wascii[]     = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
+                                          L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
 
-static const wchar_t wascii_ext[] = { L' ',  L'.', L'\'', L'`', L'^', L'"', L',', L':', L';', L'I', L'l', L'!', L'i', L'>',
-                                      L'<',  L'~', L'+',  L'_', L'-', L'?', L']', L'[', L'}', L'{', L'1', L')', L'(', L'|',
-                                      L'\\', L'/', L't',  L'f', L'j', L'r', L'x', L'n', L'u', L'v', L'c', L'z', L'X', L'Y',
-                                      L'U',  L'J', L'C',  L'L', L'Q', L'0', L'O', L'Z', L'm', L'w', L'q', L'p', L'd', L'b',
-                                      L'k',  L'h', L'a',  L'o', L'*', L'#', L'M', L'W', L'&', L'8', L'%', L'B', L'@', L'$' };
+static constexpr wchar_t wascii_ext[] = { L' ',  L'.', L'\'', L'`', L'^', L'"', L',', L':', L';', L'I', L'l', L'!', L'i', L'>',
+                                          L'<',  L'~', L'+',  L'_', L'-', L'?', L']', L'[', L'}', L'{', L'1', L')', L'(', L'|',
+                                          L'\\', L'/', L't',  L'f', L'j', L'r', L'x', L'n', L'u', L'v', L'c', L'z', L'X', L'Y',
+                                          L'U',  L'J', L'C',  L'L', L'Q', L'0', L'O', L'Z', L'm', L'w', L'q', L'p', L'd', L'b',
+                                          L'k',  L'h', L'a',  L'o', L'*', L'#', L'M', L'W', L'&', L'8', L'%', L'B', L'@', L'$' };
 
-static const wchar_t wascii_[]    = { L' ', L'.', L'-', L',', L':', L'+', L'~', L';', L'(', L'%', L'x', L'1', L'*', L'n', L'u',
-                                      L'T', L'3', L'J', L'5', L'$', L'S', L'4', L'F', L'P', L'G', L'O', L'V', L'X', L'E', L'Z',
-                                      L'8', L'A', L'U', L'D', L'H', L'K', L'W', L'@', L'B', L'Q', L'#', L'0', L'M', L'N' };
+static constexpr wchar_t wascii_[]    = { L' ', L'.', L'-', L',', L':', L'+', L'~', L';', L'(', L'%', L'x', L'1', L'*', L'n', L'u',
+                                          L'T', L'3', L'J', L'5', L'$', L'S', L'4', L'F', L'P', L'G', L'O', L'V', L'X', L'E', L'Z',
+                                          L'8', L'A', L'U', L'D', L'H', L'K', L'W', L'@', L'B', L'Q', L'#', L'0', L'M', L'N' };
 
-    #define char_array wascii_ext
+#define char_array wascii_ext
 
 // weighted averaging: (pix.BLUE * 0.299L) + (pix.GREEN * 0.587) + (pix.RED * 0.114)
-static __forceinline wchar_t __stdcall __ScaleRgbQuadWAVG(_In_ const RGBQUAD* const restrict pixel) {
+[[nodiscard]] static constexpr wchar_t __stdcall __ScaleRgbQuadWAVG(_In_ const RGBQUAD* const pixel) {
     return char_array[(size_t) (pixel->rgbBlue * 0.299L + pixel->rgbGreen * 0.587L + pixel->rgbRed * 0.114L) % __crt_countof(char_array)];
 }
 
 // regular arithmetic average using integer division
-static __forceinline wchar_t __stdcall __ScaleRgbQuadAVG(_In_ const RGBQUAD* const restrict pixel) {
+[[nodiscard]] static constexpr wchar_t __stdcall __ScaleRgbQuadAVG(_In_ const RGBQUAD* const pixel) {
     return char_array[(((size_t) (pixel->rgbBlue) + pixel->rgbGreen + pixel->rgbRed) / 3) % __crt_countof(char_array)];
 }
 
@@ -34,7 +33,7 @@ typedef struct buffer {
         const size_t   length;                                           // count of wchar_t s in the buffer.
 } buffer_t;
 
-static inline buffer_t GenerateASCIIRawBuffer(_In_ const WinBMP* const restrict image) {
+[[nodiscard]] static constexpr buffer_t GenerateASCIIRawBuffer(_In_ const WinBMP* const image) {
     const size_t   npixels = (size_t) image->infhead.biHeight * image->infhead.biWidth;
     const size_t   nwchars = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
 
@@ -91,7 +90,7 @@ static inline buffer_t GenerateASCIIRawBuffer(_In_ const WinBMP* const restrict 
 // chars) The total downscaling is completely predicated only on the image width, and the proportionate scaling effects will
 // automatically apply to the image height.
 
-static inline buffer_t GenerateASCIIDownScaledBuffer(_In_ const WinBMP* const restrict image) {
+static inline buffer_t GenerateASCIIDownScaledBuffer(_In_ const WinBMP* const image) {
     // downscaling needs to be done in pixel blocks.
     // each block will be represented by a single wchar_t
     const size_t   block_s   = ceill(image->infhead.biWidth / 140.0L);
@@ -166,8 +165,6 @@ static inline buffer_t GenerateASCIIDownScaledBuffer(_In_ const WinBMP* const re
 }
 
 // a context dependent dispatcher for GenerateRawASCIIBuffer and GenerateDownScaledASCIIBuffer
-static __forceinline buffer_t __stdcall GenerateASCIIBuffer(_In_ const WinBMP* const restrict image) {
+static __forceinline buffer_t __stdcall GenerateASCIIBuffer(_In_ const WinBMP* const image) {
     return (image->infhead.biWidth <= 140) ? GenerateASCIIRawBuffer(image) : GenerateASCIIDownScaledBuffer(image);
 }
-
-#endif // !__ASCII_H_
