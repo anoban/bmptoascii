@@ -23,22 +23,25 @@ namespace bmp {
     namespace mappers {
 
         // a functor giving back the weighted average of an RGB pixel values
-        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct RgbQuadWeightedAverage final {
-                constexpr T operator()(const RGBQUAD& pixel) const noexcept {
+        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct weighted_average final {
+                using value_type = T;
+                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
                     return static_cast<T>(pixel.rgbBlue * 0.299L + pixel.rgbGreen * 0.587L + pixel.rgbRed * 0.114L);
                 }
         };
 
         // a functor giving back the arithmetic average of an RGB pixel values
-        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct RgbQuadArithmeticAverage final {
-                constexpr T operator()(const RGBQUAD& pixel) const noexcept {
+        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct arithmetic_average final {
+                using value_type = T;
+                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
                     return static_cast<T>((pixel.rgbBlue + pixel.rgbGreen + pixel.rgbRed) / 3.000L);
                 }
         };
 
-        // a functor giving back the arithmetic average of an RGB pixel values
-        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct RgbQuadMinMaxAverage final {
-                constexpr T operator()(const RGBQUAD& pixel) const noexcept {
+        // a functor giving back the average of minimum and maximum RGB values in a pixel
+        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct minmax_average final {
+                using value_type = T;
+                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
                     return static_cast<T>(
                         (std::min(pixel.rgbBlue + pixel.rgbGreen + pixel.rgbRed) + std::max(pixel.rgbBlue + pixel.rgbGreen + pixel.rgbRed)
                         ) /
@@ -48,14 +51,46 @@ namespace bmp {
         };
 
         // a functor giving back the luminosity of an RGB pixel
-        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct RgbQuadLuminosity final {
-                constexpr T operator()(const RGBQUAD& pixel) const noexcept {
+        template<typename T = unsigned> requires std::is_arithmetic_v<T> struct luminosity final {
+                using value_type = T;
+                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
                     return static_cast<T>(pixel.rgbBlue * 0.2126L + pixel.rgbGreen * 0.7152L + pixel.rgbRed * 0.0722L);
                 }
         };
 
-        template<typename T, unsigned length, typename scaler> requires requires { scaler::operator()(); }
-        [[nodiscard("Expensive")]] wchar_t constexpr colourmap() noexcept { }
+        // a composer that uses a specified pair of palette and RGB to BW mapper to return an appropriate wchar_t
+        template<typename rgbscaler, unsigned palettelen> class colormap final {
+            private:
+                rgbscaler                       _rgbscaler;
+                std::array<wchar_t, palettelen> _palette;
+                unsigned                        _palette_len;
+
+            public:
+                using size_type  = rgbscaler::value_type; // will be used to index into the palette buffer
+                using value_type = wchar_t;               // return type of operator()
+
+                constexpr colormap() noexcept :
+                    _rgbscaler(weighted_average<> {}), _palette(palette_extended), _palette_len(palette_extended.size()) { }
+
+                constexpr colormap(const std::array<wchar_t, palettelen>& palette, const rgbscaler& scaler) noexcept requires requires {
+                    scaler.operator()();   // rgb scaler must have a valid operator() defined!
+                    rgbscaler::value_type; // and a public type alias called value_type
+                } : _rgbscaler(scaler), _palette(palette), _palette_len(palette.size()) { }
+
+                constexpr colormap(const colormap& other) noexcept :
+                    _rgbscaler(other.scaler), _palette(other.palette), _palette_len(other.palette.size()) { }
+
+                constexpr colormap(colormap&& other) noexcept :
+                    _rgbscaler(std::move(other.scaler)), _palette(std::move(other.palette)), _palette_len(_palette.size()) { }
+
+                colormap& operator=(const colormap& other) = delete; // no copy assignment operator
+
+                colormap operator=(colormap&& other)       = delete; // no move assignment operator
+
+                ~colormap()                                = default;
+
+                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept { return _palette[_rgbscaler(pixel) % _palette_len]; }
+        };
 
     } // namespace mappers
 

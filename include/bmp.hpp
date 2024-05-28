@@ -1,18 +1,20 @@
 #pragma once
 
+#include <cstddef>
+#include <type_traits>
+#include <vector>
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_MEAN
 #define NOMINMAX
-#include <array>
+#include <array> // NOLINT(unused-includes)
 #include <cassert>
-#include <cmath>
+#include <cmath> // NOLINT(unused-includes)
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <numeric>
 
 #include <Windows.h>
-
 
 namespace bmp {
 
@@ -56,7 +58,7 @@ namespace bmp {
         }
     }
 
-    static constexpr BITMAPFILEHEADER __ParseBitmapFileHeader(_In_ const uint8_t* imstream, _In_ const uint64_t fsize) {
+    static constexpr BITMAPFILEHEADER __ParseBitmapFileHeader(_In_ const std::vector<uint8_t>& imstream) noexcept {
         static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "Error: BITMAPFILEHEADER is not 14 bytes in size.");
         assert(fsize >= sizeof(BITMAPFILEHEADER));
 
@@ -68,17 +70,17 @@ namespace bmp {
             return header;
         }
 
-        header.bfSize    = *((uint32_t*) (imstream + 2));
-        header.bfOffBits = *((uint32_t*) (imstream + 10));
+        header.bfSize    = *reinterpret_cast<const uint32_t*>(imstream.data() + 2);
+        header.bfOffBits = *reinterpret_cast<const uint32_t*>(imstream.data() + 10);
 
         return header;
     }
 
-    static constexpr BITMAPINFOHEADER __ParseBitmapInfoHeader(_In_ const uint8_t* const imstream, _In_ const uint64_t fsize) {
+    static constexpr BITMAPINFOHEADER __ParseBitmapInfoHeader(_In_ const std::vector<uint8_t>& imstream) noexcept {
         static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "Error: BITMAPINFOHEADER is not 40 bytes in size");
         assert(fsize >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
 
-        BITMAPINFOHEADER header = {
+        BITMAPINFOHEADER header {
             .biSize          = 0,
             .biWidth         = 0,
             .biHeight        = 0,
@@ -92,38 +94,44 @@ namespace bmp {
             .biClrImportant  = 0,
         };
 
-        if (*((uint32_t*) (imstream + 14U)) > 40) {
+        if (*((uint32_t*) (imstream.data() + 14U)) > 40) {
             fputws(L"BMP image seems to contain an unparsable file info header", stderr);
             return header;
         }
 
-        header.biSize          = *((uint32_t*) (imstream + 14U));
-        header.biWidth         = *((uint32_t*) (imstream + 18U));
-        header.biHeight        = *((int32_t*) (imstream + 22U));
-        header.biPlanes        = *((uint16_t*) (imstream + 26U));
-        header.biBitCount      = *((uint16_t*) (imstream + 28U));
-        header.biCompression   = *((uint32_t*) (imstream + 30U));
-        header.biSizeImage     = *((uint32_t*) (imstream + 34U));
-        header.biXPelsPerMeter = *((uint32_t*) (imstream + 38U));
-        header.biYPelsPerMeter = *((uint32_t*) (imstream + 42U));
-        header.biClrUsed       = *((uint32_t*) (imstream + 46U));
-        header.biClrImportant  = *((uint32_t*) (imstream + 50U));
+        header.biSize          = *(reinterpret_cast<const uint32_t*>(imstream.data() + 14U));
+        header.biWidth         = *(reinterpret_cast<const uint32_t*>(imstream.data() + 18U));
+        header.biHeight        = *(reinterpret_cast<const int32_t*>(imstream.data() + 22U));
+        header.biPlanes        = *(reinterpret_cast<const uint16_t*>(imstream.data() + 26U));
+        header.biBitCount      = *(reinterpret_cast<const uint16_t*>(imstream.data() + 28U));
+        header.biCompression   = *(reinterpret_cast<const uint32_t*>(imstream.data() + 30U));
+        header.biSizeImage     = *(reinterpret_cast<const uint32_t*>(imstream.data() + 34U));
+        header.biXPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream.data() + 38U));
+        header.biYPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream.data() + 42U));
+        header.biClrUsed       = *(reinterpret_cast<const uint32_t*>(imstream.data() + 46U));
+        header.biClrImportant  = *(reinterpret_cast<const uint32_t*>(imstream.data() + 50U));
 
         return header;
     }
 
     // A struct representing a BMP image.
 
-    struct WinBMP {
-            size_t           fsize;
-            size_t           npixels;
+    template<typename T, bool = std::is_unsigned<T>::value_type> class bmp;
+
+    template<typename T> class bmp<T, true> final {
+        public:
+            using size_type = T;
+
+        private:
+            size_type        fsize;
+            size_type        npixels;
             BITMAPFILEHEADER fhead;
             BITMAPINFOHEADER infhead;
             RGBQUAD*         pixel_buffer;
     };
 
     static inline WinBMP NewBmpImage(_In_ const uint8_t* const imstream /* will be freed by this procedure */, _In_ const size_t size) {
-        WinBMP image = {
+        bmp image = {
             .fsize = 0, .npixels = 0, .fhead = { 0, 0, 0, 0, 0 },
                     .infhead = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
                     .pixel_buffer = NULL
