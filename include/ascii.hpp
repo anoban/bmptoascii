@@ -1,26 +1,46 @@
 #pragma once
+
+// clang-format off
+#define _AMD64_
+#define WIN32
+#define WIN32_LEAN_AND_MEAN
+#define WIN32_EXTRA_MEAN
+#include <WinBase.h>
+#include <wingdi.h>
+// clang-format on
+
+#include <array>
+#include <cstdio>
+#include <iterator>
+#include <string>
+#include <type_traits>
+
 #include <bmp.hpp>
 
-namespace bmp {
+namespace utilities {
 
-    // ASCII characters in ascending order of luminance
-    static constexpr std::array<wchar_t, 27> palette_minimal { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c',
-                                                               L'b', L'a', L'!', L'?', L'1', L'2', L'3', L'4', L'5',
-                                                               L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
+    namespace palettes {
 
-    static constexpr std::array<wchar_t, 44> palette { L' ', L'.', L'-', L',', L':', L'+', L'~', L';', L'(', L'%', L'x',
-                                                       L'1', L'*', L'n', L'u', L'T', L'3', L'J', L'5', L'$', L'S', L'4',
-                                                       L'F', L'P', L'G', L'O', L'V', L'X', L'E', L'Z', L'8', L'A', L'U',
-                                                       L'D', L'H', L'K', L'W', L'@', L'B', L'Q', L'#', L'0', L'M', L'N' };
+        // ASCII characters in ascending order of luminance
+        static constexpr std::array<wchar_t, 27> palette_minimal { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c',
+                                                                   L'b', L'a', L'!', L'?', L'1', L'2', L'3', L'4', L'5',
+                                                                   L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
 
-    static constexpr std::array<wchar_t, 70> palette_extended { L' ', L'.', L'\'', L'`', L'^',  L'"', L',', L':', L';', L'I', L'l', L'!',
-                                                                L'i', L'>', L'<',  L'~', L'+',  L'_', L'-', L'?', L']', L'[', L'}', L'{',
-                                                                L'1', L')', L'(',  L'|', L'\\', L'/', L't', L'f', L'j', L'r', L'x', L'n',
-                                                                L'u', L'v', L'c',  L'z', L'X',  L'Y', L'U', L'J', L'C', L'L', L'Q', L'0',
-                                                                L'O', L'Z', L'm',  L'w', L'q',  L'p', L'd', L'b', L'k', L'h', L'a', L'o',
-                                                                L'*', L'#', L'M',  L'W', L'&',  L'8', L'%', L'B', L'@', L'$' };
+        static constexpr std::array<wchar_t, 44> palette { L' ', L'.', L'-', L',', L':', L'+', L'~', L';', L'(', L'%', L'x',
+                                                           L'1', L'*', L'n', L'u', L'T', L'3', L'J', L'5', L'$', L'S', L'4',
+                                                           L'F', L'P', L'G', L'O', L'V', L'X', L'E', L'Z', L'8', L'A', L'U',
+                                                           L'D', L'H', L'K', L'W', L'@', L'B', L'Q', L'#', L'0', L'M', L'N' };
 
-    namespace mappers {
+        static constexpr std::array<wchar_t, 70> palette_extended {
+            L' ', L'.', L'\'', L'`', L'^', L'"', L',', L':', L';', L'I', L'l',  L'!', L'i', L'>', L'<', L'~', L'+', L'_',
+            L'-', L'?', L']',  L'[', L'}', L'{', L'1', L')', L'(', L'|', L'\\', L'/', L't', L'f', L'j', L'r', L'x', L'n',
+            L'u', L'v', L'c',  L'z', L'X', L'Y', L'U', L'J', L'C', L'L', L'Q',  L'0', L'O', L'Z', L'm', L'w', L'q', L'p',
+            L'd', L'b', L'k',  L'h', L'a', L'o', L'*', L'#', L'M', L'W', L'&',  L'8', L'%', L'B', L'@', L'$'
+        };
+
+    } // namespace palettes
+
+    namespace transformers {
 
         // a functor giving back the arithmetic average of an RGB pixel values
         template<typename T = unsigned> requires std::is_unsigned_v<T>
@@ -62,45 +82,58 @@ namespace bmp {
                 }
         };
 
-        // a composer that uses a specified pair of palette and RGB to BW mapper to return an appropriate wchar_t
-        template<typename rgbscaler, unsigned palettelen> class colormap final {
-            private:
-                rgbscaler                       _rgbscaler;
-                std::array<wchar_t, palettelen> _palette;
-                unsigned                        _palette_len;
+    } // namespace transformers
 
-            public:
-                using size_type  = rgbscaler::value_type; // will be used to index into the palette buffer
-                using value_type = wchar_t;               // return type of operator()
+    // a composer that uses a specified pair of palette and RGB to BW mapper to return an appropriate wchar_t
+    template<typename transformer, unsigned palettelen> class rgbmapper final {
+        private:
+            transformer                     _rgbtransformer;
+            std::array<wchar_t, palettelen> _palette;
+            unsigned                        _palette_len;
 
-                constexpr colormap() noexcept :
-                    _rgbscaler(weighted_average<> {}), _palette(palette_extended), _palette_len(palette_extended.size()) { }
+        public:
+            using size_type  = transformer::value_type; // will be used to index into the palette buffer
+            using value_type = wchar_t;                 // return type of operator()
 
-                constexpr colormap(const std::array<wchar_t, palettelen>& palette, const rgbscaler& scaler) noexcept requires requires {
-                    scaler.operator()();   // rgb scaler must have a valid operator() defined!
-                    rgbscaler::value_type; // and a public type alias called value_type
-                } : _rgbscaler(scaler), _palette(palette), _palette_len(palette.size()) { }
+            constexpr rgbmapper() noexcept :
+                _rgbtransformer(transformers::weighted_average<> {}),
+                _palette(palettes::palette_extended),
+                _palette_len(palettes::palette_extended.size()) { }
 
-                constexpr colormap(const colormap& other) noexcept :
-                    _rgbscaler(other.scaler), _palette(other.palette), _palette_len(other.palette.size()) { }
+            constexpr rgbmapper(const std::array<wchar_t, palettelen>& palette, const transformer& transformer) noexcept requires requires {
+                constexpr auto pixel RGBQUAD {};
+                transformer.operator()(pixel); // rgb transformer must have a valid operator() that takes a reference to RGBQUAD defined!
+                transformer::value_type;       // and a public type alias called value_type
+            } : _rgbtransformer(transformer), _palette(palette), _palette_len(palette.size()) { }
 
-                constexpr colormap(colormap&& other) noexcept :
-                    _rgbscaler(std::move(other.scaler)), _palette(std::move(other.palette)), _palette_len(_palette.size()) { }
+            constexpr rgbmapper(const rgbmapper& other) noexcept :
+                _rgbtransformer(other.scaler), _palette(other.palette), _palette_len(other.palette.size()) { }
 
-                constexpr colormap& operator=(const colormap& other) noexcept {
-                    if (this == &other) return *this;
-                }
+            constexpr rgbmapper(rgbmapper&& other) noexcept :
+                _rgbtransformer(std::move(other.scaler)), _palette(std::move(other.palette)), _palette_len(_palette.size()) { }
 
-                constexpr colormap& operator=(colormap&& other) noexcept { }
+            constexpr rgbmapper& operator=(const rgbmapper& other) noexcept {
+                if (this == &other) return *this;
+                _rgbtransformer = other._rgbtransformer;
+                _palette        = other._palette;
+                _palette_len    = other._palette_len;
+                return *this;
+            }
 
-                constexpr ~colormap() = default;
+            constexpr rgbmapper& operator=(rgbmapper&& other) noexcept {
+                if (this == &other) return *this;
+                _rgbtransformer = other._rgbtransformer;
+                _palette        = other._palette;
+                _palette_len    = other._palette_len;
+                return *this;
+            }
 
-                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept { return _palette[_rgbscaler(pixel) % _palette_len]; }
-        };
+            constexpr ~rgbmapper() = default;
 
-    } // namespace mappers
+            constexpr value_type operator()(const RGBQUAD& pixel) const noexcept { return _palette[_rgbtransformer(pixel) % _palette_len]; }
+    };
 
-    template<typename T> [[nodiscard("Expensive")]] static inline std::wstring GenerateASCIIRawBuffer(_In_ const bmp<T>& image) {
+    template<typename T> [[nodiscard("expensive")]] static inline std::wstring to_string(_In_ const bmp::bmp& image) {
         const size_t npixels = (size_t) image->infhead.biHeight * image->infhead.biWidth;
         const size_t nwchars = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
 
@@ -158,11 +191,11 @@ namespace bmp {
     // chars) The total downscaling is completely predicated only on the image width, and the proportionate scaling effects will
     // automatically apply to the image height.
 
-    template<typename T> static inline std::wstring GenerateASCIIDownScaledBuffer(_In_ const bmp<T>& image) {
+    template<typename T> static inline std::wstring to_downscaled_string(_In_ const bmp::bmp& image) {
         // downscaling needs to be done in pixel blocks.
         // each block will be represented by a single wchar_t
-        const size_t block_s   = ceill(image->infhead.biWidth / 140.0L);
-        const size_t block_dim = powl(block_s, 2.0000L);
+        const size_t block_s   = std::ceill(image.infhead.biWidth / 140.0L);
+        const size_t block_dim = std::powl(block_s, 2.0000L);
 
         // We'd have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent
         // that block as a wchar_t. one wchar_t in our buffer will have to represent (block_w x block_h) number of RGBQUADs
@@ -235,9 +268,76 @@ namespace bmp {
         return (buffer_t) { buffer, caret };
     }
 
-    // a context dependent dispatcher for GenerateRawASCIIBuffer and GenerateDownScaledASCIIBuffer
-    static __forceinline buffer_t __stdcall GenerateASCIIBuffer(_In_ const bmp* const image) {
-        return (image->infhead.biWidth <= 140) ? GenerateASCIIRawBuffer(image) : GenerateASCIIDownScaledBuffer(image);
-    }
+} // namespace utilities
 
-} // namespace bmp
+template<typename T> class random_access_iterator final { // unchecked iterator class to be used with class bmp
+    public:
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type        = std::remove_cv_t<T>;
+        using size_type         = unsigned long long;
+        using difference_type   = ptrdiff_t;
+        using pointer           = T*;
+        using const_pointer     = const T*;
+        using reference         = T&;
+        using const_reference   = const T&;
+
+    private:
+        pointer   _resource;
+        size_type _offset;
+        size_type _length;
+
+    public:
+        constexpr random_access_iterator() noexcept : _resource(), _offset(), _length() { }
+
+        constexpr random_access_iterator(pointer _ptr, size_type _size) noexcept : _resource(_ptr), _offset(), _length(_size) { }
+
+        constexpr random_access_iterator(pointer _ptr, size_type _pos, size_type _size) noexcept :
+            _resource(_ptr), _offset(_pos), _length(_size) { }
+
+        constexpr random_access_iterator(const random_access_iterator& other) noexcept :
+            _resource(other._resource), _offset(other._offset), _length(other._length) { }
+
+        constexpr random_access_iterator(random_access_iterator&& other) noexcept :
+            _resource(other._resource), _offset(other._offset), _length(other._length) {
+            // cleanup the moved object
+            other._resource = nullptr;
+            other._offset = other._length = 0;
+        }
+
+        constexpr ~random_access_iterator() noexcept {
+            _resource = nullptr;
+            _offset = _length = 0;
+        }
+
+        constexpr random_access_iterator& operator=(const random_access_iterator& other) noexcept {
+            if (this == &other) return *this;
+            _resource = other._resource;
+            _offset   = other._offset;
+            _length   = other._length;
+            return *this;
+        }
+
+        constexpr random_access_iterator& operator=(random_access_iterator&& other) noexcept {
+            if (this == &other) return *this;
+            _resource       = other._resource;
+            _offset         = other._offset;
+            _length         = other._length;
+
+            other._resource = nullptr;
+            other._offset = other._length = 0;
+
+            return *this;
+        }
+
+        constexpr random_access_iterator& operator++() noexcept { }
+
+        constexpr random_access_iterator operator++(int) noexcept { }
+
+        constexpr random_access_iterator& operator--() noexcept { }
+
+        constexpr random_access_iterator operator--(int) noexcept { }
+
+        constexpr reference operator*() noexcept { return _resource[_offset]; }
+
+        constexpr const_reference operator*() const noexcept { return _resource[_offset]; }
+};

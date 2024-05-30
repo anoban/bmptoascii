@@ -1,34 +1,40 @@
 #pragma once
 
 // clang-format off
-#include <wingdi.h>
+#define _AMD64_
+#define WIN32
+#define WIN64
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_MEAN
 #define NOMINMAX
+#include <WinBase.h>
+#include <wingdi.h>
+#include <fileapi.h>
+#include <errhandlingapi.h>
+#include <handleapi.h>
+// clang-format on
 
-#include <array> // NOLINT(unused-includes)
 #include <cassert>
-#include <cmath> // NOLINT(unused-includes)
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cstddef>
-#include <type_traits>
-#include <vector>
-#include <numeric>
 #include <optional>
-#include <string>
-#include <Windows.h>
-// clang-format on
+
+#include <ascii.hpp>
 
 static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "BITMAPINFOHEADER is expected to be 40 bytes in size, but is not so!");
 static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "BITMAPFILEHEADER is expected to be 14 bytes in size, but is not so!");
 
 namespace bmp {
-    [[nodiscard("Expensive")]] static inline std::optional<std::vector<uint8_t>> Open(_In_ const wchar_t* const filename) {
+    [[nodiscard("expensive")]] static inline std::optional<uint8_t*> open(
+        _In_ const wchar_t* const filename, _Inout_ unsigned* const rbytes
+    ) noexcept {
         DWORD          nbytes {};
-        LARGE_INTEGER  liFsize = { .QuadPart = 0LLU };
-        const HANDLE64 hFile   = ::CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+        LARGE_INTEGER  liFsize { .QuadPart = 0LLU };
+        const HANDLE64 hFile { ::CreateFileW(filename, GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, nullptr) };
+        uint8_t*       buffer {};
+        BOOL           bReadStatus {};
 
         if (hFile == INVALID_HANDLE_VALUE) {
             ::fwprintf_s(stderr, L"Error %lu in CreateFileW\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
@@ -40,100 +46,91 @@ namespace bmp {
             goto GET_FILESIZE_ERR;
         }
 
-        std::vector<uint8_t> buffer(liFsize.QuadPart);
+        buffer = new (std::nothrow) uint8_t[liFsize.QuadPart];
+        if (!buffer) {
+            ::fputws(L"Memory allocation error in utilities::open\n", stderr); // NOLINT(cppcoreguidelines-pro-type-vararg)
+            goto GET_FILESIZE_ERR;
+        }
 
-        if (!::ReadFile(hFile, buffer.data(), liFsize.QuadPart, &nbytes, NULL)) {
+        bReadStatus = ::ReadFile(hFile, buffer, liFsize.QuadPart, &nbytes, nullptr);
+        if (!bReadStatus) {
             ::fwprintf_s(stderr, L"Error %lu in ReadFile\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
-            goto READFILE_ERR;
+            goto GET_FILESIZE_ERR;
         }
 
         ::CloseHandle(hFile);
+        *rbytes = nbytes;
         return buffer;
 
 GET_FILESIZE_ERR:
-        CloseHandle(hFile);
+        delete[] buffer;
+        ::CloseHandle(hFile);
 INVALID_HANDLE_ERR:
+        *rbytes = 0;
         return std::nullopt;
     }
 
-    static inline BITMAPFILEHEADER __ParseBitmapFileHeader(_In_ const std::vector<uint8_t>& imstream) noexcept {
-        assert(imstream.size() >= sizeof(BITMAPFILEHEADER));
-
+    static __forceinline BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
+        assert(size >= sizeof(BITMAPFILEHEADER));
         BITMAPFILEHEADER header { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
-        header.bfType = (((uint16_t) (*(imstream.data() + 1))) << 8) | ((uint16_t) (*imstream.data()));
+        header.bfType = (((uint16_t) (*(imstream + 1))) << 8) | ((uint16_t) (*imstream));
+        // we expect the first and second bytes of a BMP file to be 'B', 'M'
         if (header.bfType != (((uint16_t) 'M' << 8) | (uint16_t) 'B')) {
-            fputws(L"Error in __ParseBitmapFileHeader, file appears not to be a Windows BMP file\n", stderr);
+            fputws(L"Error in parsefileheader, file appears not to be a Windows BMP file\n", stderr);
             return header;
         }
 
-        header.bfSize    = *reinterpret_cast<const uint32_t*>(imstream.data() + 2);
-        header.bfOffBits = *reinterpret_cast<const uint32_t*>(imstream.data() + 10);
-
+        header.bfSize    = *reinterpret_cast<const uint32_t*>(imstream + 2);
+        header.bfOffBits = *reinterpret_cast<const uint32_t*>(imstream + 10);
         return header;
     }
 
-    static inline BITMAPINFOHEADER __ParseBitmapInfoHeader(_In_ const std::vector<uint8_t>& imstream) noexcept {
-        assert(imstream.size() >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
-
+    static __forceinline BITMAPINFOHEADER __stdcall parseinfoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
+        assert(size >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
         BITMAPINFOHEADER header {};
 
-        if (*reinterpret_cast<const uint32_t*>(imstream.data() + 14U) > 40U) { // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-            fputws(L"BMP image seems to contain an unparsable file info header", stderr);
+        if (*reinterpret_cast<const uint32_t*>(imstream + 14U) > 40U) { // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            fputws(L"Error in parseinfoheader, BMP image seems to contain an unparsable file info header", stderr);
             return header;
         }
 
         // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        header.biSize          = *(reinterpret_cast<const uint32_t*>(imstream.data() + 14U));
-        header.biWidth         = *(reinterpret_cast<const uint32_t*>(imstream.data() + 18U));
-        header.biHeight        = *(reinterpret_cast<const int32_t*>(imstream.data() + 22U));
-        header.biPlanes        = *(reinterpret_cast<const uint16_t*>(imstream.data() + 26U));
-        header.biBitCount      = *(reinterpret_cast<const uint16_t*>(imstream.data() + 28U));
-        header.biCompression   = *(reinterpret_cast<const uint32_t*>(imstream.data() + 30U));
-        header.biSizeImage     = *(reinterpret_cast<const uint32_t*>(imstream.data() + 34U));
-        header.biXPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream.data() + 38U));
-        header.biYPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream.data() + 42U));
-        header.biClrUsed       = *(reinterpret_cast<const uint32_t*>(imstream.data() + 46U));
-        header.biClrImportant  = *(reinterpret_cast<const uint32_t*>(imstream.data() + 50U));
+        header.biSize          = *(reinterpret_cast<const uint32_t*>(imstream + 14U));
+        header.biWidth         = *(reinterpret_cast<const uint32_t*>(imstream + 18U));
+        header.biHeight        = *(reinterpret_cast<const int32_t*>(imstream + 22U));
+        header.biPlanes        = *(reinterpret_cast<const uint16_t*>(imstream + 26U));
+        header.biBitCount      = *(reinterpret_cast<const uint16_t*>(imstream + 28U));
+        header.biCompression   = *(reinterpret_cast<const uint32_t*>(imstream + 30U));
+        header.biSizeImage     = *(reinterpret_cast<const uint32_t*>(imstream + 34U));
+        header.biXPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream + 38U));
+        header.biYPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream + 42U));
+        header.biClrUsed       = *(reinterpret_cast<const uint32_t*>(imstream + 46U));
+        header.biClrImportant  = *(reinterpret_cast<const uint32_t*>(imstream + 50U));
         // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-
         return header;
     }
 
-    // A struct representing a BMP image.
-
-    template<typename T, bool = std::is_unsigned<T>::value> class bmp;
-
-    template<typename T> class bmp<T, true> final { // partial specialization that only supports unsigned scalar types
-        public:
-            using size_type = T;
-
+    class bmp final { // class representing a Windows BMP image.
         private:
-            size_type        _fsize;
-            size_type        _npixels;
+            size_t           _fsize;
+            size_t           _npixels;
             BITMAPFILEHEADER _fhead;
             BITMAPINFOHEADER _infhead;
             RGBQUAD*         _pixel_buffer;
+            uint8_t*         _raw_buffer;
 
         public:
-            constexpr bmp() noexcept : _fsize(), _npixels(), _fhead(), _infhead(), _pixel_buffer() { }
+            constexpr bmp() noexcept : _fsize(), _npixels(), _fhead(), _infhead(), _pixel_buffer(), _raw_buffer() { }
 
-            constexpr bmp(_In_ const std::vector<uint8_t>& imstream) noexcept {
-                bmp image = {
-                    .fsize        = 0,
-                    .npixels      = 0,
-                    .fhead        = { 0, 0, 0, 0, 0 },
-                    .infhead      = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-                    .pixel_buffer = nullptr
-                };
-
+            constexpr bmp(_In_ const uint8_t* const imstream) noexcept {
                 if (imstream.empty()) {
                     ::fwprintf_s(stderr, L"Error in %s @ line %d: nullptr buffer received!\n", __FUNCTIONW__, __LINE__);
-                    return image;
+                    return;
                 }
 
-                const BITMAPFILEHEADER fh   = __ParseBitmapFileHeader(imstream, size);
-                const BITMAPINFOHEADER infh = __ParseBitmapInfoHeader(imstream, size);
+                const BITMAPFILEHEADER fh   = parsefileheader(imstream);
+                const BITMAPINFOHEADER infh = parseinfoheader(imstream);
 
                 RGBQUAD* const buffer       = malloc(size - 54);
                 if (buffer) {
@@ -151,33 +148,33 @@ INVALID_HANDLE_ERR:
                 _npixels(other._npixels),
                 _fhead(other._fhead),
                 _infhead(other._infhead),
-                _pixel_buffer(new RGBQUAD[other._npixels]) {
+                _pixel_buffer(new (std::nothrow) RGBQUAD[other._npixels]) {
                 std::copy();
             }
 
             constexpr bmp(bmp&& other) noexcept { }
 
-            inline void BmpInfo(_In_ const bmp* const image) const noexcept {
+            void info() const noexcept {
                 wprintf_s(
                     L"\nFile size %Lf MiBs\nPixel data start offset: %d\n"
                     L"BITMAPINFOHEADER size: %u\nImage width: %u\nImage height: %d\nNumber of planes: %hu\n"
                     L"Number of bits per pixel: %hu\nImage size: %u\nResolution PPM(X): %u\nResolution PPM(Y): %u\nNumber of used colormap entries: %d\n"
                     L"Number of important colors: %d\n",
-                    (long double) (image->fhead.bfSize) / (1024LLU * 1024LLU),
-                    image->fhead.bfOffBits,
-                    image->infhead.biSize,
-                    image->infhead.biWidth,
-                    image->infhead.biHeight,
-                    image->infhead.biPlanes,
-                    image->infhead.biBitCount,
-                    image->infhead.biSizeImage,
-                    image->infhead.biXPelsPerMeter,
-                    image->infhead.biYPelsPerMeter,
-                    image->infhead.biClrUsed,
-                    image->infhead.biClrImportant
+                    _fhead.bfSize / 1048576.000L, // 1024 * 1024
+                    _fhead.bfOffBits,
+                    _infhead.biSize,
+                    _infhead.biWidth,
+                    _infhead.biHeight,
+                    _infhead.biPlanes,
+                    _infhead.biBitCount,
+                    _infhead.biSizeImage,
+                    _infhead.biXPelsPerMeter,
+                    _infhead.biYPelsPerMeter,
+                    _infhead.biClrUsed,
+                    _infhead.biClrImportant
                 );
 
-                switch (image->infhead.biCompression) {
+                switch (_infhead.biCompression) {
                     case 0  : _putws(L"BITMAPINFOHEADER.CMPTYPE: RGB"); break;
                     case 1  : _putws(L"BITMAPINFOHEADER.CMPTYPE: RLE4"); break;
                     case 2  : _putws(L"BITMAPINFOHEADER.CMPTYPE: RLE8"); break;
@@ -188,11 +185,15 @@ INVALID_HANDLE_ERR:
                 wprintf_s(
                     L"%s BMP file\n"
                     L"BMP pixel ordering: %s\n",
-                    image->infhead.biSizeImage != 0 ? L"Compressed" : L"Uncompressed",
-                    image->infhead.biHeight >= 0 ? L"BOTTOMUP\n" : L"TOPDOWN\n"
+                    _infhead.biSizeImage != 0 ? L"Compressed" : L"Uncompressed",
+                    _infhead.biHeight >= 0 ? L"BOTTOMUP\n" : L"TOPDOWN\n"
                 );
 
                 return;
+            }
+
+            __forceinline std::wstring __stdcall tostring() noexcept {
+                return (image->infhead.biWidth <= 140) ? to_string(image) : to_downscaled_string(image);
             }
     };
 
