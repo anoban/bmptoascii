@@ -2,10 +2,10 @@
 
 // clang-format off
 #define _AMD64_
-#define WIN32
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_MEAN
-#include <WinBase.h>
+#define NOMINMAX
+#include <windef.h>
 #include <wingdi.h>
 // clang-format on
 
@@ -19,8 +19,10 @@
 
 namespace utilities {
 
-    namespace palettes {
+    template<typename T> concept is_rgb =
+        std::is_same<typename std::remove_cv<T>::type, RGBQUAD>::value || std::is_same<typename std::remove_cv<T>::type, RGBTRIPLE>::value;
 
+    namespace palettes {
         // ASCII characters in ascending order of luminance
         static constexpr std::array<wchar_t, 27> palette_minimal { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c',
                                                                    L'b', L'a', L'!', L'?', L'1', L'2', L'3', L'4', L'5',
@@ -43,8 +45,8 @@ namespace utilities {
     namespace transformers {
 
         // a functor giving back the arithmetic average of an RGB pixel values
-        template<typename T = unsigned> requires std::is_unsigned_v<T>
-        struct arithmetic_average { // also doubles as the base class for other functors
+        template<typename T = unsigned, typename U = RGBQUAD, typename = std::enable_if<std::is_unsigned_v<T>, bool>::type>
+        requires is_rgb<U> struct arithmetic_average { // also doubles as the base class for other functors
                 using value_type = T;
                 constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
                     return static_cast<T>(
@@ -100,11 +102,13 @@ namespace utilities {
                 _palette(palettes::palette_extended),
                 _palette_len(palettes::palette_extended.size()) { }
 
-            constexpr rgbmapper(const std::array<wchar_t, palettelen>& palette, const transformer& transformer) noexcept requires requires {
-                constexpr auto pixel RGBQUAD {};
-                transformer.operator()(pixel); // rgb transformer must have a valid operator() that takes a reference to RGBQUAD defined!
-                transformer::value_type;       // and a public type alias called value_type
-            } : _rgbtransformer(transformer), _palette(palette), _palette_len(palette.size()) { }
+            constexpr rgbmapper(const std::array<wchar_t, palettelen>& palette, const transformer& _transformer) noexcept
+                requires requires {
+                    _transformer.operator()(RGBQUAD {}); // argument is of type const RGBQUAD& so will work :)
+                    // rgb transformer must have a valid operator() that takes a reference to RGBQUAD defined!
+                    transformer::value_type; // and a public type alias called value_type
+                }
+                : _rgbtransformer(_transformer), _palette(palette), _palette_len(palette.size()) { }
 
             constexpr rgbmapper(const rgbmapper& other) noexcept :
                 _rgbtransformer(other.scaler), _palette(other.palette), _palette_len(other.palette.size()) { }
@@ -130,11 +134,12 @@ namespace utilities {
 
             constexpr ~rgbmapper() = default;
 
+            // gives the wchar_t corresponding to the provided RGB pixel
             constexpr value_type operator()(const RGBQUAD& pixel) const noexcept { return _palette[_rgbtransformer(pixel) % _palette_len]; }
     };
 
-    template<typename T> [[nodiscard("expensive")]] static inline std::wstring to_string(_In_ const bmp::bmp& image) {
-        const size_t npixels = (size_t) image->infhead.biHeight * image->infhead.biWidth;
+    [[nodiscard("expensive")]] static inline std::wstring to_string(_In_ const bmp::bmp& image) {
+        const size_t npixels = (size_t) image._infhead.biHeight * image->infhead.biWidth;
         const size_t nwchars = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
 
         std::wstring buffer {};
@@ -191,7 +196,7 @@ namespace utilities {
     // chars) The total downscaling is completely predicated only on the image width, and the proportionate scaling effects will
     // automatically apply to the image height.
 
-    template<typename T> static inline std::wstring to_downscaled_string(_In_ const bmp::bmp& image) {
+    static inline std::wstring to_downscaled_string(_In_ const bmp::bmp& image) {
         // downscaling needs to be done in pixel blocks.
         // each block will be represented by a single wchar_t
         const size_t block_s   = std::ceill(image.infhead.biWidth / 140.0L);
@@ -268,76 +273,76 @@ namespace utilities {
         return (buffer_t) { buffer, caret };
     }
 
+    template<typename T> class random_access_iterator final { // unchecked iterator class to be used with class bmp
+        public:
+            using iterator_category = std::random_access_iterator_tag;
+            using value_type        = std::remove_cv_t<T>;
+            using size_type         = unsigned long long;
+            using difference_type   = ptrdiff_t;
+            using pointer           = T*;
+            using const_pointer     = const T*;
+            using reference         = T&;
+            using const_reference   = const T&;
+
+        private:
+            pointer   _resource;
+            size_type _offset;
+            size_type _length;
+
+        public:
+            constexpr random_access_iterator() noexcept : _resource(), _offset(), _length() { }
+
+            constexpr random_access_iterator(pointer _ptr, size_type _size) noexcept : _resource(_ptr), _offset(), _length(_size) { }
+
+            constexpr random_access_iterator(pointer _ptr, size_type _pos, size_type _size) noexcept :
+                _resource(_ptr), _offset(_pos), _length(_size) { }
+
+            constexpr random_access_iterator(const random_access_iterator& other) noexcept :
+                _resource(other._resource), _offset(other._offset), _length(other._length) { }
+
+            constexpr random_access_iterator(random_access_iterator&& other) noexcept :
+                _resource(other._resource), _offset(other._offset), _length(other._length) {
+                // cleanup the moved object
+                other._resource = nullptr;
+                other._offset = other._length = 0;
+            }
+
+            constexpr ~random_access_iterator() noexcept {
+                _resource = nullptr;
+                _offset = _length = 0;
+            }
+
+            constexpr random_access_iterator& operator=(const random_access_iterator& other) noexcept {
+                if (this == &other) return *this;
+                _resource = other._resource;
+                _offset   = other._offset;
+                _length   = other._length;
+                return *this;
+            }
+
+            constexpr random_access_iterator& operator=(random_access_iterator&& other) noexcept {
+                if (this == &other) return *this;
+                _resource       = other._resource;
+                _offset         = other._offset;
+                _length         = other._length;
+
+                other._resource = nullptr;
+                other._offset = other._length = 0;
+
+                return *this;
+            }
+
+            constexpr random_access_iterator& operator++() noexcept { }
+
+            constexpr random_access_iterator operator++(int) noexcept { }
+
+            constexpr random_access_iterator& operator--() noexcept { }
+
+            constexpr random_access_iterator operator--(int) noexcept { }
+
+            constexpr reference operator*() noexcept { return _resource[_offset]; }
+
+            constexpr const_reference operator*() const noexcept { return _resource[_offset]; }
+    };
+
 } // namespace utilities
-
-template<typename T> class random_access_iterator final { // unchecked iterator class to be used with class bmp
-    public:
-        using iterator_category = std::random_access_iterator_tag;
-        using value_type        = std::remove_cv_t<T>;
-        using size_type         = unsigned long long;
-        using difference_type   = ptrdiff_t;
-        using pointer           = T*;
-        using const_pointer     = const T*;
-        using reference         = T&;
-        using const_reference   = const T&;
-
-    private:
-        pointer   _resource;
-        size_type _offset;
-        size_type _length;
-
-    public:
-        constexpr random_access_iterator() noexcept : _resource(), _offset(), _length() { }
-
-        constexpr random_access_iterator(pointer _ptr, size_type _size) noexcept : _resource(_ptr), _offset(), _length(_size) { }
-
-        constexpr random_access_iterator(pointer _ptr, size_type _pos, size_type _size) noexcept :
-            _resource(_ptr), _offset(_pos), _length(_size) { }
-
-        constexpr random_access_iterator(const random_access_iterator& other) noexcept :
-            _resource(other._resource), _offset(other._offset), _length(other._length) { }
-
-        constexpr random_access_iterator(random_access_iterator&& other) noexcept :
-            _resource(other._resource), _offset(other._offset), _length(other._length) {
-            // cleanup the moved object
-            other._resource = nullptr;
-            other._offset = other._length = 0;
-        }
-
-        constexpr ~random_access_iterator() noexcept {
-            _resource = nullptr;
-            _offset = _length = 0;
-        }
-
-        constexpr random_access_iterator& operator=(const random_access_iterator& other) noexcept {
-            if (this == &other) return *this;
-            _resource = other._resource;
-            _offset   = other._offset;
-            _length   = other._length;
-            return *this;
-        }
-
-        constexpr random_access_iterator& operator=(random_access_iterator&& other) noexcept {
-            if (this == &other) return *this;
-            _resource       = other._resource;
-            _offset         = other._offset;
-            _length         = other._length;
-
-            other._resource = nullptr;
-            other._offset = other._length = 0;
-
-            return *this;
-        }
-
-        constexpr random_access_iterator& operator++() noexcept { }
-
-        constexpr random_access_iterator operator++(int) noexcept { }
-
-        constexpr random_access_iterator& operator--() noexcept { }
-
-        constexpr random_access_iterator operator--(int) noexcept { }
-
-        constexpr reference operator*() noexcept { return _resource[_offset]; }
-
-        constexpr const_reference operator*() const noexcept { return _resource[_offset]; }
-};

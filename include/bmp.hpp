@@ -2,12 +2,10 @@
 
 // clang-format off
 #define _AMD64_
-#define WIN32
-#define WIN64
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_MEAN
 #define NOMINMAX
-#include <WinBase.h>
+#include <windef.h>
 #include <wingdi.h>
 #include <fileapi.h>
 #include <errhandlingapi.h>
@@ -15,13 +13,11 @@
 // clang-format on
 
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <cstdlib>
 #include <optional>
 
-#include <ascii.hpp>
+#include <utilities.hpp>
 
 static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "BITMAPINFOHEADER is expected to be 40 bytes in size, but is not so!");
 static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "BITMAPFILEHEADER is expected to be 14 bytes in size, but is not so!");
@@ -70,7 +66,7 @@ INVALID_HANDLE_ERR:
         return std::nullopt;
     }
 
-    static __forceinline BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
+    inline BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
         assert(size >= sizeof(BITMAPFILEHEADER));
         BITMAPFILEHEADER header { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
@@ -86,7 +82,7 @@ INVALID_HANDLE_ERR:
         return header;
     }
 
-    static __forceinline BITMAPINFOHEADER __stdcall parseinfoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
+    inline BITMAPINFOHEADER __stdcall parseinfoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
         assert(size >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
         BITMAPINFOHEADER header {};
 
@@ -111,36 +107,38 @@ INVALID_HANDLE_ERR:
         return header;
     }
 
-    class bmp final { // class representing a Windows BMP image.
+    template<typename T> requires utilities::is_rgb<T> class bmp final { // class representing a Windows BMP image.
+        public:
+            using size_type       = unsigned long long;
+            using value_type      = std::remove_cv_t<T>;
+            using pointer         = std::remove_cv_t<T>*;
+            using const_pointer   = const std::remove_cv_t<T>*;
+            using reference       = std::remove_cv_t<T>&;
+            using const_reference = const std::remove_cv_t<T>&;
+            using difference_type = ptrdiff_t;
+            using iterator        = utilities::random_access_iterator<value_type>;
+            using const_iterator  = utilities::random_access_iterator<const value_type>;
+
         private:
-            size_t           _fsize;
-            size_t           _npixels;
-            BITMAPFILEHEADER _fhead;
-            BITMAPINFOHEADER _infhead;
-            RGBQUAD*         _pixel_buffer;
-            uint8_t*         _raw_buffer;
+            size_type        _fsize;        // file size on disk
+            size_type        _npixels;      // number of pixels in the image
+            BITMAPFILEHEADER _fhead;        // file header
+            BITMAPINFOHEADER _infhead;      // information header
+            RGBQUAD*         _pixel_buffer; //  _raw_buffer + 54; type casted byte in the raw buffer
+                                            // could opt for using a separate buffer, but wasteful and will bite runtime performance
+            uint8_t*         _raw_buffer;   // raw bytes of the image file
 
         public:
             constexpr bmp() noexcept : _fsize(), _npixels(), _fhead(), _infhead(), _pixel_buffer(), _raw_buffer() { }
 
-            constexpr bmp(_In_ const uint8_t* const imstream) noexcept {
-                if (imstream.empty()) {
-                    ::fwprintf_s(stderr, L"Error in %s @ line %d: nullptr buffer received!\n", __FUNCTIONW__, __LINE__);
+            constexpr bmp(_In_reads_(len) const uint8_t* const imstream, _In_ const size_type len) noexcept {
+                if (!imstream) {
+                    ::fwprintf_s(stderr, L"Error in %s @ line %d: empty buffer received!\n", __FUNCTIONW__, __LINE__);
                     return;
                 }
 
-                const BITMAPFILEHEADER fh   = parsefileheader(imstream);
-                const BITMAPINFOHEADER infh = parseinfoheader(imstream);
-
-                RGBQUAD* const buffer       = malloc(size - 54);
-                if (buffer) {
-                    memcpy_s(buffer, size - 54, imstream + 54, size - 54);
-                } else {
-                    ::fwprintf_s(stderr, L"Error in %s @ line %d: malloc falied!\n", __FUNCTIONW__, __LINE__);
-                    return image;
-                }
-
-                return (bmp) { .fsize = size, .npixels = (size - 54) / 4, .fhead = fh, .infhead = infh, .pixel_buffer = buffer };
+                const BITMAPFILEHEADER fh   = parsefileheader(imstream, len);
+                const BITMAPINFOHEADER infh = parseinfoheader(imstream, len);
             }
 
             constexpr bmp(const bmp& other) noexcept :
@@ -154,8 +152,27 @@ INVALID_HANDLE_ERR:
 
             constexpr bmp(bmp&& other) noexcept { }
 
+            constexpr bmp& operator=(const bmp& other) noexcept { }
+
+            constexpr bmp& operator=(bmp&& other) noexcept { }
+
+            ~bmp() noexcept {
+                delete[] _raw_buffer;
+                _pixel_buffer = nullptr;
+                _raw_buffer   = nullptr;
+                _fsize = _npixels = 0;
+                _fhead            = BITMAPFILEHEADER {};
+                _infhead          = BITMAPINFOHEADER {};
+            }
+
+            constexpr size_type width() const noexcept { return _infhead.biWidth; }
+
+            constexpr size_type height() const noexcept { return _infhead.biHeight; }
+
             void info() const noexcept {
-                wprintf_s(
+                // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg)
+
+                ::wprintf_s(
                     L"\nFile size %Lf MiBs\nPixel data start offset: %d\n"
                     L"BITMAPINFOHEADER size: %u\nImage width: %u\nImage height: %d\nNumber of planes: %hu\n"
                     L"Number of bits per pixel: %hu\nImage size: %u\nResolution PPM(X): %u\nResolution PPM(Y): %u\nNumber of used colormap entries: %d\n"
@@ -182,15 +199,31 @@ INVALID_HANDLE_ERR:
                     default : _putws(L"BITMAPINFOHEADER.CMPTYPE: UNKNOWN"); break;
                 }
 
-                wprintf_s(
+                ::wprintf_s(
                     L"%s BMP file\n"
                     L"BMP pixel ordering: %s\n",
                     _infhead.biSizeImage != 0 ? L"Compressed" : L"Uncompressed",
                     _infhead.biHeight >= 0 ? L"BOTTOMUP\n" : L"TOPDOWN\n"
                 );
 
-                return;
+                // NOLINTEND(cppcoreguidelines-pro-type-vararg)
             }
+
+            constexpr iterator begin() noexcept { }
+
+            constexpr const_iterator begin() const noexcept { }
+
+            constexpr const_iterator cbegin() const noexcept { }
+
+            constexpr iterator end() noexcept { }
+
+            constexpr const_iterator end() const noexcept { }
+
+            constexpr const_iterator cend() const noexcept { }
+
+            constexpr pointer data() noexcept { }
+
+            constexpr const_pointer data() const noexcept { }
 
             __forceinline std::wstring __stdcall tostring() noexcept {
                 return (image->infhead.biWidth <= 140) ? to_string(image) : to_downscaled_string(image);
