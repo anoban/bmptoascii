@@ -66,7 +66,7 @@ INVALID_HANDLE_ERR:
         return std::nullopt;
     }
 
-    inline BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
+    static inline BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
         assert(size >= sizeof(BITMAPFILEHEADER));
         BITMAPFILEHEADER header { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
@@ -82,7 +82,7 @@ INVALID_HANDLE_ERR:
         return header;
     }
 
-    inline BITMAPINFOHEADER __stdcall parseinfoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
+    static inline BITMAPINFOHEADER __stdcall parseinfoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
         assert(size >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
         BITMAPINFOHEADER header {};
 
@@ -107,7 +107,7 @@ INVALID_HANDLE_ERR:
         return header;
     }
 
-    template<typename T> requires utilities::is_rgb<T> class bmp final { // class representing a Windows BMP image.
+    template<typename T = RGBQUAD> requires utilities::is_rgb<T> class bmp final { // class representing a Windows BMP image.
         public:
             using size_type       = unsigned long long;
             using value_type      = std::remove_cv_t<T>;

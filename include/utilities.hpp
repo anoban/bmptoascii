@@ -18,9 +18,14 @@
 #include <bmp.hpp>
 
 namespace utilities {
-
-    template<typename T> concept is_rgb =
-        std::is_same<typename std::remove_cv<T>::type, RGBQUAD>::value || std::is_same<typename std::remove_cv<T>::type, RGBTRIPLE>::value;
+    // should be the wingdi provided RGBTRIPLE or RGBQUAD structs or should have unsigned 8 bit data members named rgbBlue, rgbGreen and rgbRed
+    template<typename T> concept is_rgb = std::is_same<typename std::remove_cv<T>::type, RGBQUAD>::value ||
+                                          std::is_same<typename std::remove_cv<T>::type, RGBTRIPLE>::value ||
+                                          requires(const typename std::remove_cv<T>::type& pixel) {
+                                              requires(std::numeric_limits<decltype(pixel.rgbBlue)>::max() == UCHAR_MAX);
+                                              pixel.rgbBlue + pixel.rgbGreen + pixel.rgbRed; // members must support the operator+
+                                              pixel.rgbBlue * 0.75673L; // members must also support operator* with floating point types
+                                          };
 
     namespace palettes {
         // ASCII characters in ascending order of luminance
@@ -45,30 +50,40 @@ namespace utilities {
     namespace transformers {
 
         // a functor giving back the arithmetic average of an RGB pixel values
-        template<typename T = unsigned, typename U = RGBQUAD, typename = std::enable_if<std::is_unsigned_v<T>, bool>::type>
-        requires is_rgb<U> struct arithmetic_average { // also doubles as the base class for other functors
-                using value_type = T;
-                constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
-                    return static_cast<T>(
-                        (/* we don't want overflows and truncations here */ static_cast<double>(pixel.rgbBlue) + pixel.rgbGreen +
+        template<
+            typename return_type = unsigned,
+            typename pixel_type  = RGBQUAD,
+            typename             = std::enable_if<std::is_unsigned_v<return_type>, bool>::type>
+        requires is_rgb<pixel_type>
+        struct arithmetic_average { // struct arithmetic_average also doubles as the base class for other functors
+                // deriving from arithmetic_average purely to leverage the requires is_rgb<pixel_type> constraint through inheritance with minimal redundancy
+                using value_type = return_type;
+                constexpr value_type operator()(const pixel_type& pixel) const noexcept {
+                    return static_cast<return_type>(
+                        (/* we don't want overflows or truncations here */ static_cast<double>(pixel.rgbBlue) + pixel.rgbGreen +
                          pixel.rgbRed) /
                         3.000L
                     );
                 }
         };
 
-        // a functor giving back the weighted average of an RGB pixel values
-        template<typename T = unsigned> struct weighted_average final : public arithmetic_average<T> {
-                constexpr arithmetic_average<T>::value_type operator()(const RGBQUAD& pixel) const noexcept {
-                    return static_cast<T>(pixel.rgbBlue * 0.299L + pixel.rgbGreen * 0.587L + pixel.rgbRed * 0.114L);
+        template<typename pixel_type, typename return_type = unsigned>
+        struct weighted_average final : public arithmetic_average<return_type, pixel_type> {
+                // using arithmetic_average<return_type, pixel_type>::value_type makes the signature extremely verbose
+                using value_type = return_type;
+                // weighted average of an RGB pixel values
+                constexpr value_type operator()(const pixel_type& pixel) const noexcept {
+                    return static_cast<return_type>(pixel.rgbBlue * 0.299L + pixel.rgbGreen * 0.587L + pixel.rgbRed * 0.114L);
                 }
         };
 
-        // a functor giving back the average of minimum and maximum RGB values in a pixel
-        template<typename T = unsigned> struct minmax_average final : public arithmetic_average<T> {
-                constexpr arithmetic_average<T>::value_type operator()(const RGBQUAD& pixel) const noexcept {
-                    return static_cast<T>(
-                        (/* we don't want overflows and truncations here */ static_cast<double>(
+        template<typename pixel_type, typename return_type = unsigned>
+        struct minmax_average final : public arithmetic_average<return_type, pixel_type> {
+                using value_type = return_type;
+                // average of minimum and maximum RGB values in a pixel
+                constexpr value_type operator()(const pixel_type& pixel) const noexcept {
+                    return static_cast<return_type>(
+                        (/* we don't want overflows or truncations here */ static_cast<double>(
                              std::min({ pixel.rgbBlue, pixel.rgbGreen, pixel.rgbRed })
                          ) +
                          std::max({ pixel.rgbBlue, pixel.rgbGreen, pixel.rgbRed })) /
@@ -77,38 +92,45 @@ namespace utilities {
                 }
         };
 
-        // a functor giving back the luminosity of an RGB pixel
-        template<typename T = unsigned> struct luminosity final : public arithmetic_average<T> {
-                constexpr arithmetic_average<T>::value_type operator()(const RGBQUAD& pixel) const noexcept {
-                    return static_cast<T>(pixel.rgbBlue * 0.2126L + pixel.rgbGreen * 0.7152L + pixel.rgbRed * 0.0722L);
+        template<typename pixel_type, typename return_type = unsigned>
+        struct luminosity final : public arithmetic_average<return_type, pixel_type> {
+                using value_type = return_type;
+                // luminosity of an RGB pixel
+                constexpr value_type operator()(const pixel_type& pixel) const noexcept {
+                    return static_cast<return_type>(pixel.rgbBlue * 0.2126L + pixel.rgbGreen * 0.7152L + pixel.rgbRed * 0.0722L);
                 }
         };
 
     } // namespace transformers
 
     // a composer that uses a specified pair of palette and RGB to BW mapper to return an appropriate wchar_t
-    template<typename transformer, unsigned palettelen> class rgbmapper final {
+    template<
+        typename transformer_type = transformers::weighted_average<RGBQUAD>, // default RGB transformer
+        unsigned plength /* palette length */ =
+            palettes::palette_extended.size()> // the palette used by the mapper will default to palette_extended
+    // imposing class level type constraints won't play well with the user defined default ctor as the compiler cannot deduce the types used in the requires expressions
+    // hence, moving them to the custom ctor.
+    class rgbmapper final {
         private:
-            transformer                     _rgbtransformer;
-            std::array<wchar_t, palettelen> _palette;
-            unsigned                        _palette_len;
+            transformer_type             _rgbtransformer;
+            std::array<wchar_t, plength> _palette;
+            unsigned                     _palette_len;
 
         public:
-            using size_type  = transformer::value_type; // will be used to index into the palette buffer
-            using value_type = wchar_t;                 // return type of operator()
+            using size_type      = transformer_type::value_type; // will be used to index into the palette buffer
+            using value_type     = wchar_t;                      // return type of operator()
+            using converter_type = transformer_type;             // RGB to BW converter type
+            using pixel_type     = ;
 
             constexpr rgbmapper() noexcept :
-                _rgbtransformer(transformers::weighted_average<> {}),
-                _palette(palettes::palette_extended),
-                _palette_len(palettes::palette_extended.size()) { }
+                _rgbtransformer(converter_type {}), _palette(palettes::palette_extended), _palette_len(plength) { }
 
-            constexpr rgbmapper(const std::array<wchar_t, palettelen>& palette, const transformer& _transformer) noexcept
-                requires requires {
-                    _transformer.operator()(RGBQUAD {}); // argument is of type const RGBQUAD& so will work :)
-                    // rgb transformer must have a valid operator() that takes a reference to RGBQUAD defined!
-                    transformer::value_type; // and a public type alias called value_type
-                }
-                : _rgbtransformer(_transformer), _palette(palette), _palette_len(palette.size()) { }
+            constexpr rgbmapper(const std::array<wchar_t, plength>& palette, const converter_type& transformer) noexcept requires requires {
+                transformer.operator()();
+                // argument is of type const RGBQUAD& so will work :)
+                // rgb transformer must have a valid operator() that takes a reference to RGBQUAD defined!
+                transformer_type::value_type; // and a public type alias called value_type
+            } : _rgbtransformer(transformer), _palette(palette), _palette_len(palette.size()) { }
 
             constexpr rgbmapper(const rgbmapper& other) noexcept :
                 _rgbtransformer(other.scaler), _palette(other.palette), _palette_len(other.palette.size()) { }
@@ -134,8 +156,14 @@ namespace utilities {
 
             constexpr ~rgbmapper() = default;
 
+            // NEEDS CORRECTIONS!
             // gives the wchar_t corresponding to the provided RGB pixel
-            constexpr value_type operator()(const RGBQUAD& pixel) const noexcept { return _palette[_rgbtransformer(pixel) % _palette_len]; }
+            constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
+                // _rgbtransformer(pixel) can range from 0 to 255
+                auto _offset { _rgbtransformer(pixel) };
+                // hence, _offset / static_cast<float>(UCHAR_MAX) can range from 0.0 to 1.0
+                return _palette[_offset ? (_offset / static_cast<float>(UCHAR_MAX) * _palette_len) - 1 : 0];
+            }
     };
 
     [[nodiscard("expensive")]] static inline std::wstring to_string(_In_ const bmp::bmp& image) {
