@@ -1,4 +1,4 @@
-
+#include <bmp.hpp>
 
 namespace bmp {
     [[nodiscard("expensive")]] static inline std::optional<uint8_t*> open(
@@ -15,19 +15,19 @@ namespace bmp {
             goto INVALID_HANDLE_ERR;
         }
 
-        if (!::GetFileSizeEx(hFile, &liFsize)) {
+        if (!::GetFileSizeEx(hFile, &liFsize)) {                                     // NOLINT(readability-implicit-bool-conversion)
             ::fwprintf_s(stderr, L"Error %lu in GetFileSizeEx\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
             goto GET_FILESIZE_ERR;
         }
 
         buffer = new (std::nothrow) uint8_t[liFsize.QuadPart];
-        if (!buffer) {
+        if (!buffer) {                                                         // NOLINT(readability-implicit-bool-conversion)
             ::fputws(L"Memory allocation error in utilities::open\n", stderr); // NOLINT(cppcoreguidelines-pro-type-vararg)
             goto GET_FILESIZE_ERR;
         }
 
         bReadStatus = ::ReadFile(hFile, buffer, liFsize.QuadPart, &nbytes, nullptr);
-        if (!bReadStatus) {
+        if (!bReadStatus) {                                                     // NOLINT(readability-implicit-bool-conversion)
             ::fwprintf_s(stderr, L"Error %lu in ReadFile\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
             goto GET_FILESIZE_ERR;
         }
@@ -48,15 +48,16 @@ INVALID_HANDLE_ERR:
         assert(size >= sizeof(BITMAPFILEHEADER));
         BITMAPFILEHEADER header { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
-        header.bfType = (((uint16_t) (*(imstream + 1))) << 8) | ((uint16_t) (*imstream));
+        const uint16_t tmp =
+            (((uint16_t) (*(imstream + 1))) << 8) | ((uint16_t) (*imstream)); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         // we expect the first and second bytes of a BMP file to be 'B', 'M'
-        if (header.bfType != (((uint16_t) 'M' << 8) | (uint16_t) 'B')) {
+        if (tmp != (((uint16_t) 'M' << 8) | (uint16_t) 'B')) {
             fputws(L"Error in parsefileheader, file appears not to be a Windows BMP file\n", stderr);
             return header;
         }
 
-        header.bfSize    = *reinterpret_cast<const uint32_t*>(imstream + 2);
-        header.bfOffBits = *reinterpret_cast<const uint32_t*>(imstream + 10);
+        header.bfSize    = *reinterpret_cast<const uint32_t*>(imstream + 2);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        header.bfOffBits = *reinterpret_cast<const uint32_t*>(imstream + 10); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         return header;
     }
 
@@ -85,7 +86,7 @@ INVALID_HANDLE_ERR:
         return header;
     }
 
-    template<typename T = RGBQUAD> requires utilities::is_rgb<T> class bmp final { // class representing a Windows BMP image.
+    template<typename T> requires utilities::is_rgb<T> class bmp final { // class representing a Windows BMP image.
         public:
             using size_type       = unsigned long long;
             using value_type      = std::remove_cv_t<T>;

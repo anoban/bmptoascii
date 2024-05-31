@@ -1,3 +1,7 @@
+#include <cmath>
+#include <cstdio>
+#include <string>
+
 [[nodiscard("expensive")]] static inline std::wstring to_string(_In_ const bmp::bmp& image) {
     const size_t npixels = (size_t) image._infhead.biHeight * image->infhead.biWidth;
     const size_t nwchars = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
@@ -5,7 +9,7 @@
     std::wstring buffer {};
     buffer.resize(nwchars * sizeof(wchar_t));
     if (buffer.empty()) {
-        fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
+        ::fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
         return buffer;
     }
 
@@ -70,7 +74,7 @@ static inline std::wstring to_downscaled_string(_In_ const bmp::bmp& image) {
     buffer.resize(nwchars * sizeof(wchar_t));
 
     if (buffer.empty()) {
-        fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
+        ::fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
         return buffer;
     }
 

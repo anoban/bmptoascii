@@ -14,8 +14,9 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
 #include <optional>
+
+#include <utilities.hpp>
 
 static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "BITMAPINFOHEADER is expected to be 40 bytes in size, but is not so!");
 static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "BITMAPFILEHEADER is expected to be 14 bytes in size, but is not so!");
@@ -29,5 +30,5 @@ namespace bmp {
 
     static inline BITMAPINFOHEADER __stdcall parseinfoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept;
 
-    template<typename T = RGBQUAD> requires utilities::is_rgb<T> class bmp final;
+    template<typename T = RGBQUAD> requires utilities::is_rgb<T> class bmp;
 } // namespace bmp
