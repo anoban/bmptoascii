@@ -25,21 +25,10 @@ struct OBJECT {
         unsigned long long _dummy2 {};
 };
 
-[[maybe_unused]] static constexpr auto rt_min {
-    RGBTRIPLE { 0x00, 0x00, 0x00 }
-};
-
-[[maybe_unused]] static constexpr auto rt_max {
-    RGBTRIPLE { 0xFF, 0xFF, 0xFF }
-};
-
-[[maybe_unused]] static constexpr auto rq_min {
-    RGBQUAD { 0x00, 0x00, 0x00, 0xFF }
-};
-
-[[maybe_unused]] static constexpr auto rq_max {
-    RGBQUAD { 0xFF, 0xFF, 0xFF, 0xFF }
-};
+[[maybe_unused]] static constexpr RGBTRIPLE rt_min {};
+[[maybe_unused]] static constexpr RGBTRIPLE rt_max { 0xFF, 0xFF, 0xFF };
+[[maybe_unused]] static constexpr RGBQUAD   rq_min { 0x00, 0x00, 0x00, 0xFF };
+[[maybe_unused]] static constexpr RGBQUAD   rq_max { 0xFF, 0xFF, 0xFF, 0xFF };
 
 auto wmain() -> int {
 #pragma region __TEST_TRANSFORMERS__
@@ -48,6 +37,11 @@ auto wmain() -> int {
     constexpr auto ar_average_rt { utilities::transformers::arithmetic_average<RGBTRIPLE> {} };
     constexpr auto ar_average_rp { utilities::transformers::arithmetic_average<RGBPIXEL<unsigned char>> {} };
     constexpr auto ar_average_ro { utilities::transformers::arithmetic_average<OBJECT> {} };
+
+    static_assert(ar_average_rq(rq_min) == 0);
+    static_assert(ar_average_rq(rq_max) == UCHAR_MAX);
+    static_assert(ar_average_rt(rt_min) == 0);
+    static_assert(ar_average_rt(rt_max) == UCHAR_MAX);
 
     constexpr auto w_average_rq { utilities::transformers::weighted_average<> {} };
     constexpr auto w_average_rt { utilities::transformers::weighted_average<RGBTRIPLE> {} };
@@ -70,6 +64,9 @@ auto wmain() -> int {
 
 #pragma endregion __TEST_RGBMAPPER__
 
+#pragma region __TEST_FAILS__ // regions for tests that will & must fail
+
+#pragma endregion __TEST_FAILS__
     return EXIT_SUCCESS;
 }
 

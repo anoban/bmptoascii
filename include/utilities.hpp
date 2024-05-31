@@ -10,12 +10,14 @@
 // clang-format on
 
 #include <array>
+#include <climits>
 #include <cstdio>
 #include <iterator>
 #include <string>
 #include <type_traits>
 
 #include <bmp.hpp>
+
 
 namespace utilities {
     // should be the wingdi provided RGBTRIPLE or RGBQUAD structs or should have unsigned 8 bit data members named rgbBlue, rgbGreen and rgbRed
@@ -58,7 +60,7 @@ namespace utilities {
         struct arithmetic_average { // struct arithmetic_average also doubles as the base class for other functors
                 // deriving from arithmetic_average purely to leverage the requires is_rgb<pixel_type> constraint through inheritance with minimal redundancy
                 using value_type = return_type;
-                constexpr value_type operator()(const pixel_type& pixel) const noexcept {
+                [[nodiscard]] constexpr value_type operator()(const pixel_type& pixel) const noexcept {
                     return static_cast<return_type>(
                         (/* we don't want overflows or truncations here */ static_cast<double>(pixel.rgbBlue) + pixel.rgbGreen +
                          pixel.rgbRed) /
@@ -72,7 +74,7 @@ namespace utilities {
                 // using arithmetic_average<pixel_type, return_type>::value_type makes the signature extremely verbose
                 using value_type = return_type;
                 // weighted average of an RGB pixel values
-                constexpr value_type operator()(const pixel_type& pixel) const noexcept {
+                [[nodiscard]] constexpr value_type operator()(const pixel_type& pixel) const noexcept {
                     return static_cast<return_type>(pixel.rgbBlue * 0.299L + pixel.rgbGreen * 0.587L + pixel.rgbRed * 0.114L);
                 }
         };
@@ -81,7 +83,7 @@ namespace utilities {
         struct minmax_average final : public arithmetic_average<pixel_type, return_type> {
                 using value_type = return_type;
                 // average of minimum and maximum RGB values in a pixel
-                constexpr value_type operator()(const pixel_type& pixel) const noexcept {
+                [[nodiscard]] constexpr value_type operator()(const pixel_type& pixel) const noexcept {
                     return static_cast<return_type>(
                         (/* we don't want overflows or truncations here */ static_cast<double>(
                              std::min({ pixel.rgbBlue, pixel.rgbGreen, pixel.rgbRed })
@@ -96,7 +98,7 @@ namespace utilities {
         struct luminosity final : public arithmetic_average<pixel_type, return_type> {
                 using value_type = return_type;
                 // luminosity of an RGB pixel
-                constexpr value_type operator()(const pixel_type& pixel) const noexcept {
+                [[nodiscard]] constexpr value_type operator()(const pixel_type& pixel) const noexcept {
                     return static_cast<return_type>(pixel.rgbBlue * 0.2126L + pixel.rgbGreen * 0.7152L + pixel.rgbRed * 0.0722L);
                 }
         };
@@ -158,7 +160,7 @@ namespace utilities {
 
             // NEEDS CORRECTIONS!
             // gives the wchar_t corresponding to the provided RGB pixel
-            constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
+            [[nodiscard]] constexpr value_type operator()(const RGBQUAD& pixel) const noexcept {
                 // _rgbtransformer(pixel) can range from 0 to 255
                 auto _offset { _rgbtransformer(pixel) };
                 // hence, _offset / static_cast<float>(UCHAR_MAX) can range from 0.0 to 1.0
