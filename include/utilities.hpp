@@ -51,8 +51,8 @@ namespace utilities {
 
         // a functor giving back the arithmetic average of an RGB pixel values
         template<
-            typename return_type = unsigned,
             typename pixel_type  = RGBQUAD,
+            typename return_type = unsigned,
             typename             = std::enable_if<std::is_unsigned_v<return_type>, bool>::type>
         requires is_rgb<pixel_type>
         struct arithmetic_average { // struct arithmetic_average also doubles as the base class for other functors
@@ -67,9 +67,9 @@ namespace utilities {
                 }
         };
 
-        template<typename pixel_type, typename return_type = unsigned>
-        struct weighted_average final : public arithmetic_average<return_type, pixel_type> {
-                // using arithmetic_average<return_type, pixel_type>::value_type makes the signature extremely verbose
+        template<typename pixel_type = RGBQUAD, typename return_type = unsigned>
+        struct weighted_average final : public arithmetic_average<pixel_type, return_type> {
+                // using arithmetic_average<pixel_type, return_type>::value_type makes the signature extremely verbose
                 using value_type = return_type;
                 // weighted average of an RGB pixel values
                 constexpr value_type operator()(const pixel_type& pixel) const noexcept {
@@ -77,8 +77,8 @@ namespace utilities {
                 }
         };
 
-        template<typename pixel_type, typename return_type = unsigned>
-        struct minmax_average final : public arithmetic_average<return_type, pixel_type> {
+        template<typename pixel_type = RGBQUAD, typename return_type = unsigned>
+        struct minmax_average final : public arithmetic_average<pixel_type, return_type> {
                 using value_type = return_type;
                 // average of minimum and maximum RGB values in a pixel
                 constexpr value_type operator()(const pixel_type& pixel) const noexcept {
@@ -92,8 +92,8 @@ namespace utilities {
                 }
         };
 
-        template<typename pixel_type, typename return_type = unsigned>
-        struct luminosity final : public arithmetic_average<return_type, pixel_type> {
+        template<typename pixel_type = RGBQUAD, typename return_type = unsigned>
+        struct luminosity final : public arithmetic_average<pixel_type, return_type> {
                 using value_type = return_type;
                 // luminosity of an RGB pixel
                 constexpr value_type operator()(const pixel_type& pixel) const noexcept {
