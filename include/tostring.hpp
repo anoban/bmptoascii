@@ -2,7 +2,9 @@
 #include <cstdio>
 #include <string>
 
-[[nodiscard("expensive")]] static inline std::wstring to_string(_In_ const bmp::bmp& image) {
+#include <bmp.hpp>
+
+template<typename pixel_type> [[nodiscard("expensive")]] static inline std::wstring to_raw_string(_In_ const bmp::bmp<pixel_type>& image) {
     const size_t npixels = (size_t) image._infhead.biHeight * image->infhead.biWidth;
     const size_t nwchars = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
 
@@ -60,7 +62,7 @@
 // chars) The total downscaling is completely predicated only on the image width, and the proportionate scaling effects will
 // automatically apply to the image height.
 
-static inline std::wstring to_downscaled_string(_In_ const bmp::bmp& image) {
+template<typename pixel_type> static inline std::wstring to_downscaled_string(_In_ const bmp::bmp<pixel_type>& image) {
     // downscaling needs to be done in pixel blocks.
     // each block will be represented by a single wchar_t
     const size_t block_s   = std::ceill(image.infhead.biWidth / 140.0L);

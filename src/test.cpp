@@ -1,7 +1,6 @@
 // #ifdef __TEST_BMPT_ASCII__
 
 #include <bmp.hpp>
-#include <utilities.hpp>
 
 // should work with transformers if T is unsigned char
 template<typename T, typename = std::enable_if<std::is_arithmetic_v<T>, bool>::type> struct RGBPIXEL {
@@ -33,30 +32,30 @@ struct OBJECT {
 auto wmain() -> int {
 #pragma region __TEST_TRANSFORMERS__
 
-    constexpr auto ar_average_rq { utilities::transformers::arithmetic_average<> {} };
-    constexpr auto ar_average_rt { utilities::transformers::arithmetic_average<RGBTRIPLE> {} };
-    constexpr auto ar_average_rp { utilities::transformers::arithmetic_average<RGBPIXEL<unsigned char>> {} };
-    constexpr auto ar_average_ro { utilities::transformers::arithmetic_average<OBJECT> {} };
+    constexpr auto ar_average_rq { ::transformers::arithmetic_average<> {} };
+    constexpr auto ar_average_rt { ::transformers::arithmetic_average<RGBTRIPLE> {} };
+    constexpr auto ar_average_rp { ::transformers::arithmetic_average<RGBPIXEL<unsigned char>> {} };
+    constexpr auto ar_average_ro { ::transformers::arithmetic_average<OBJECT> {} };
 
-    static_assert(ar_average_rq(rq_min) == 0);
+    static_assert(!ar_average_rq(rq_min));
     static_assert(ar_average_rq(rq_max) == UCHAR_MAX);
-    static_assert(ar_average_rt(rt_min) == 0);
+    static_assert(!ar_average_rt(rt_min));
     static_assert(ar_average_rt(rt_max) == UCHAR_MAX);
 
-    constexpr auto w_average_rq { utilities::transformers::weighted_average<> {} };
-    constexpr auto w_average_rt { utilities::transformers::weighted_average<RGBTRIPLE> {} };
-    constexpr auto w_average_rp { utilities::transformers::weighted_average<RGBPIXEL<unsigned char>> {} };
-    constexpr auto w_average_ro { utilities::transformers::weighted_average<OBJECT> {} };
+    constexpr auto w_average_rq { ::transformers::weighted_average<> {} };
+    constexpr auto w_average_rt { ::transformers::weighted_average<RGBTRIPLE> {} };
+    constexpr auto w_average_rp { ::transformers::weighted_average<RGBPIXEL<unsigned char>> {} };
+    constexpr auto w_average_ro { ::transformers::weighted_average<OBJECT> {} };
 
-    constexpr auto mm_average_rq { utilities::transformers::minmax_average<> {} };
-    constexpr auto mm_average_rt { utilities::transformers::minmax_average<RGBTRIPLE> {} };
-    constexpr auto mm_average_rp { utilities::transformers::minmax_average<RGBPIXEL<unsigned char>> {} };
-    constexpr auto mm_average_ro { utilities::transformers::minmax_average<OBJECT> {} };
+    constexpr auto mm_average_rq { ::transformers::minmax_average<> {} };
+    constexpr auto mm_average_rt { ::transformers::minmax_average<RGBTRIPLE> {} };
+    constexpr auto mm_average_rp { ::transformers::minmax_average<RGBPIXEL<unsigned char>> {} };
+    constexpr auto mm_average_ro { ::transformers::minmax_average<OBJECT> {} };
 
-    constexpr auto lum_average_rq { utilities::transformers::luminosity<> {} };
-    constexpr auto lum_average_rt { utilities::transformers::luminosity<RGBTRIPLE> {} };
-    constexpr auto lum_average_rp { utilities::transformers::luminosity<RGBPIXEL<unsigned char>> {} };
-    constexpr auto lum_average_ro { utilities::transformers::luminosity<OBJECT> {} };
+    constexpr auto lum_average_rq { ::transformers::luminosity<> {} };
+    constexpr auto lum_average_rt { ::transformers::luminosity<RGBTRIPLE> {} };
+    constexpr auto lum_average_rp { ::transformers::luminosity<RGBPIXEL<unsigned char>> {} };
+    constexpr auto lum_average_ro { ::transformers::luminosity<OBJECT> {} };
 
 #pragma endregion __TEST_TRANSFORMERS__
 
