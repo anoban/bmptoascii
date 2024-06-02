@@ -5,8 +5,9 @@
 #include <bmp.hpp>
 
 template<typename pixel_type> [[nodiscard("expensive")]] static inline std::wstring to_raw_string(_In_ const bmp::bmp<pixel_type>& image) {
-    const size_t npixels = (size_t) image._infhead.biHeight * image->infhead.biWidth;
-    const size_t nwchars = npixels + (2LLU * image->infhead.biHeight); // one additional L'\r', L'\n' at the end of each line
+    const auto npixels { image.height() * image.width() }; // total pixels in the image
+    const auto nwchars { npixels + 2LLU * image.height() };
+    // space for two extra wchar_ts (L'\r', L'\n') to be appended to the end of each line
 
     std::wstring buffer {};
     buffer.resize(nwchars * sizeof(wchar_t));
@@ -58,19 +59,15 @@ template<typename pixel_type> [[nodiscard("expensive")]] static inline std::wstr
     return (buffer_t) { buffer, caret };
 }
 
-// Generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width. (140
-// chars) The total downscaling is completely predicated only on the image width, and the proportionate scaling effects will
-// automatically apply to the image height.
-
+// generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width. (140
+// chars), downscaling is completely predicated only on the image width, and the proportionate scaling effects will automatically apply to the image height.
 template<typename pixel_type> static inline std::wstring to_downscaled_string(_In_ const bmp::bmp<pixel_type>& image) {
-    // downscaling needs to be done in pixel blocks.
-    // each block will be represented by a single wchar_t
+    // downscaling needs to be done in pixel blocks which will be represented by a single wchar_t
     const size_t block_s   = std::ceill(image.infhead.biWidth / 140.0L);
     const size_t block_dim = std::powl(block_s, 2.0000L);
 
-    // We'd have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent
+    // we'd have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent
     // that block as a wchar_t. one wchar_t in our buffer will have to represent (block_w x block_h) number of RGBQUADs
-
     const size_t nwchars   = 142 /* 140 wchar_ts + CRLF */ * std::ceill(image->infhead.biHeight / (long double) block_s);
     std::wstring buffer {};
     buffer.resize(nwchars * sizeof(wchar_t));

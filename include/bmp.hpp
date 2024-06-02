@@ -66,14 +66,16 @@ INVALID_HANDLE_ERR:
 
 namespace bmp {
 
+    // BMP files store this tag as 'B', followed by 'M', i.e 0x424D as an unsigned 16 bit integer,
+    // when we dereference this 16 bits as an unsigned 16 bit integer on LE machines, the byte order will get swapped i.e the two bytes will be read as 'M', 'B'
+    constexpr unsigned short start_tag_be { L'B' << 8 | L'M' };
+    constexpr unsigned short start_tag_le { L'M' << 8 | L'B' };
+
     static inline BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
         assert(size >= sizeof(BITMAPFILEHEADER));
         BITMAPFILEHEADER header { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
-        const uint16_t tmp =
-            (((uint16_t) (*(imstream + 1))) << 8) | ((uint16_t) (*imstream)); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        // we expect the first and second bytes of a BMP file to be 'B', 'M'
-        if (tmp != (((uint16_t) 'M' << 8) | (uint16_t) 'B')) {
+        if (*reinterpret_cast<const uint16_t*>(imstream) != start_tag_le) { // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             fputws(L"Error in parsefileheader, file appears not to be a Windows BMP file\n", stderr);
             return header;
         }
@@ -94,14 +96,14 @@ namespace bmp {
 
         // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         header.biSize          = *(reinterpret_cast<const uint32_t*>(imstream + 14U));
-        header.biWidth         = *(reinterpret_cast<const uint32_t*>(imstream + 18U));
+        header.biWidth         = *(reinterpret_cast<const uint32_t*>(imstream + 18U)); // NOLINT(cppcoreguidelines-narrowing-conversions)
         header.biHeight        = *(reinterpret_cast<const int32_t*>(imstream + 22U));
         header.biPlanes        = *(reinterpret_cast<const uint16_t*>(imstream + 26U));
         header.biBitCount      = *(reinterpret_cast<const uint16_t*>(imstream + 28U));
         header.biCompression   = *(reinterpret_cast<const uint32_t*>(imstream + 30U));
         header.biSizeImage     = *(reinterpret_cast<const uint32_t*>(imstream + 34U));
-        header.biXPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream + 38U));
-        header.biYPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream + 42U));
+        header.biXPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream + 38U)); // NOLINT(cppcoreguidelines-narrowing-conversions)
+        header.biYPelsPerMeter = *(reinterpret_cast<const uint32_t*>(imstream + 42U)); // NOLINT(cppcoreguidelines-narrowing-conversions)
         header.biClrUsed       = *(reinterpret_cast<const uint32_t*>(imstream + 46U));
         header.biClrImportant  = *(reinterpret_cast<const uint32_t*>(imstream + 50U));
         // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -122,24 +124,23 @@ namespace bmp {
 
         private:
             size_type        _fsize;        // file size on disk
-            size_type        _npixels;      // number of pixels in the image
             BITMAPFILEHEADER _fhead;        // file header
             BITMAPINFOHEADER _infhead;      // information header
-            value_type*      _pixel_buffer; //  _raw_buffer + 54; type casted byte in the raw buffer
-                                            // could opt for using a separate buffer, but wasteful and will bite runtime performance
+            size_type        _npixels;      // number of pixels in the image
             uint8_t*         _raw_buffer;   // raw bytes of the image file
+            pointer          _pixel_buffer; //  _raw_buffer + 54; type casted to pointer type
+                                            // could opt for using a separate buffer, but wasteful and will bite runtime performance
 
         public:
-            constexpr bmp() noexcept : _fsize(), _npixels(), _fhead(), _infhead(), _pixel_buffer(), _raw_buffer() { }
+            constexpr bmp() noexcept : _fsize(), _fhead(), _infhead(), _npixels(), _raw_buffer(), _pixel_buffer() { }
 
-            constexpr bmp(_In_reads_(len) const uint8_t* const imstream, _In_ const size_type len) noexcept {
-                if (!imstream) {
+            constexpr bmp(_In_reads_(len) const uint8_t* const imstream, _In_ const size_type len) noexcept :
+                _fsize(len), _fhead(parsefileheader(imstream, len)), _infhead(parseinfoheader(imstream, len)) {
+                if (!imstream) { // NOLINT(readability-implicit-bool-conversion)
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
                     ::fwprintf_s(stderr, L"Error in %s @ line %d: empty buffer received!\n", __FUNCTIONW__, __LINE__);
                     return;
                 }
-
-                const BITMAPFILEHEADER fh { parsefileheader(imstream, len) };
-                const BITMAPINFOHEADER infh { parseinfoheader(imstream, len) };
             }
 
             constexpr bmp(const bmp& other) noexcept :
@@ -147,15 +148,59 @@ namespace bmp {
                 _npixels(other._npixels),
                 _fhead(other._fhead),
                 _infhead(other._infhead),
-                _pixel_buffer(new (std::nothrow) RGBQUAD[other._npixels]) {
+                _raw_buffer(new (std::nothrow) uint8_t[other._fsize]) {
+                // handle pixel buffer and raw buffer
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+                ::fwprintf_s(stderr, L"Error in %s @ line %d: empty buffer received!\n", __FUNCTIONW__, __LINE__);
                 std::copy();
             }
 
-            constexpr bmp(bmp&& other) noexcept { }
+            constexpr bmp(bmp&& other) noexcept :
+                _fsize(other._fsize),
+                _npixels(other._npixels),
+                _fhead(other._fhead),
+                _infhead(other._infhead),
+                _pixel_buffer(other._pixel_buffer),
+                _raw_buffer(other._raw_buffer) {
+                // cleanup the object stolen from
+                other._fsize = other._npixels = 0;
+                other._pixel_buffer           = nullptr;
+                other._raw_buffer             = nullptr;
+                other._fhead                  = BITMAPFILEHEADER {};
+                other._infhead                = BITMAPINFOHEADER {};
+            }
 
-            constexpr bmp& operator=(const bmp& other) noexcept { }
+            constexpr bmp& operator=(const bmp& other) noexcept {
+                if (this == &other) return *this;
+                _fsize        = other._fsize;
+                _npixels      = other._npixels;
+                _fhead        = other._fhead;
+                _infhead      = other._infhead;
 
-            constexpr bmp& operator=(bmp&& other) noexcept { }
+                // handle the memory allocation
+                _pixel_buffer = other._pixel_buffer;
+                _raw_buffer   = other._raw_buffer;
+                return *this;
+            }
+
+            constexpr bmp& operator=(bmp&& other) noexcept {
+                if (this == &other) return *this;
+                _fsize        = other._fsize;
+                _npixels      = other._npixels;
+                _fhead        = other._fhead;
+                _infhead      = other._infhead;
+                _pixel_buffer = other._pixel_buffer;
+                _raw_buffer   = other._raw_buffer;
+
+                // cleanup the object stolen from
+                other._fsize = other._npixels = 0;
+                other._pixel_buffer           = nullptr;
+                other._raw_buffer             = nullptr;
+                other._fhead                  = BITMAPFILEHEADER {};
+                other._infhead                = BITMAPINFOHEADER {};
+
+                return *this;
+            }
 
             ~bmp() noexcept {
                 delete[] _raw_buffer;

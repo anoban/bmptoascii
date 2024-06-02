@@ -30,6 +30,11 @@ struct OBJECT {
 [[maybe_unused]] static constexpr RGBQUAD   rq_max { 0xFF, 0xFF, 0xFF, 0xFF };
 
 auto wmain() -> int {
+#pragma region __TEST_BMP_STARTTAG__
+    static_assert(bmp::start_tag_be == 0x424D);
+    static_assert(bmp::start_tag_le == 0x4D42);
+#pragma endregion __TEST_BMP_STARTTAG__
+
 #pragma region __TEST_TRANSFORMERS__
 
     constexpr auto ar_average_rq { ::transformers::arithmetic_average<> {} };
@@ -62,6 +67,21 @@ auto wmain() -> int {
 #pragma region __TEST_RGBMAPPER__
 
 #pragma endregion __TEST_RGBMAPPER__
+
+#pragma region __TEST_RACCITERATOR__
+    // NOLINTNEXTLINE(modernize-avoid-c-arrays)
+    static constexpr wchar_t EULA[] {
+        L"Click on the green buttons that describe your target platform. Only supported platforms will be shown. By downloading and using the software, you agree to fully comply with the terms and conditions of the CUDA EULA"
+    };
+
+    constexpr auto begin { ::iterator::random_access_iterator(EULA, __crt_countof(EULA)) };
+    constexpr auto copy { begin };
+
+    for (auto it = ::iterator::random_access_iterator(EULA, __crt_countof(EULA));
+         it != ::iterator::random_access_iterator<wchar_t> { EULA, __crt_countof(EULA), __crt_countof(EULA) };
+         ++it);
+
+#pragma endregion __TEST_RACCITERATOR__
 
 #pragma region __TEST_FAILS__ // regions for tests that will & must fail
 
