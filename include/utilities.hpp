@@ -243,13 +243,13 @@ namespace iterator {
                 return { _resource, _offset + 1, _length };
             }
 
-            constexpr reference operator*() noexcept { return _resource[_offset]; }
+            [[nodiscard]] constexpr reference operator*() noexcept { return _resource[_offset]; }
 
-            constexpr const_reference operator*() const noexcept { return _resource[_offset]; }
+            [[nodiscard]] constexpr const_reference operator*() const noexcept { return _resource[_offset]; }
 
-            constexpr pointer _Unwrapped() noexcept { return _resource; }
+            [[nodiscard]] constexpr pointer _Unwrapped() noexcept { return _resource; }
 
-            constexpr const_pointer _Unwrapped() const noexcept { return _resource; }
+            [[nodiscard]] constexpr const_pointer _Unwrapped() const noexcept { return _resource; }
     };
 
 } // namespace iterator

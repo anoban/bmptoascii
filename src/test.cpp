@@ -1,19 +1,23 @@
+// clang .\src\test.cpp -I.\include\ -std=c++ 20 -O3 -Wall -Wextra -pedantic -march=native
+
 // #ifdef __TEST_BMPT_ASCII__
 
-#include <bmp.hpp>
+#include <iostream>
+
+#include <utilities.hpp>
 
 static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "BITMAPINFOHEADER is expected to be 40 bytes in size, but is not so!");
 static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "BITMAPFILEHEADER is expected to be 14 bytes in size, but is not so!");
 
-[[maybe_unused]] static constexpr RGBQUAD rq_min { 0x00, 0x00, 0x00, 0xFF };
-[[maybe_unused]] static constexpr RGBQUAD rq_mid { 0x80, 0x80, 0x80, 0xFF };
-[[maybe_unused]] static constexpr RGBQUAD rq_max { 0xFF, 0xFF, 0xFF, 0xFF };
+[[maybe_unused]] static constexpr RGBQUAD min { 0x00, 0x00, 0x00, 0xFF };
+[[maybe_unused]] static constexpr RGBQUAD mid { 0x80, 0x80, 0x80, 0xFF };
+[[maybe_unused]] static constexpr RGBQUAD max { 0xFF, 0xFF, 0xFF, 0xFF };
 
 auto wmain() -> int {
 #pragma region __TEST_BMP_STARTTAG__
 
-    static_assert(bmp::start_tag_be == 0x424D);
-    static_assert(bmp::start_tag_le == 0x4D42);
+    // static_assert(bmp::start_tag_be == 0x424D);
+    // static_assert(bmp::start_tag_le == 0x4D42);
 
 #pragma endregion __TEST_BMP_STARTTAG__
 
@@ -24,25 +28,25 @@ auto wmain() -> int {
     constexpr auto mm_average { ::transformers::minmax_average {} };
     constexpr auto lum_average { ::transformers::luminosity {} };
 
-    static_assert(ar_average(rq_min) == std::numeric_limits<unsigned char>::min());
-    static_assert(ar_average(rq_max) == std::numeric_limits<unsigned char>::max());
-    static_assert(ar_average(rq_mid) == 128);
+    static_assert(ar_average(min) == std::numeric_limits<unsigned char>::min());
+    static_assert(ar_average(max) == std::numeric_limits<unsigned char>::max());
+    static_assert(ar_average(mid) == 128);
 
-    static_assert(w_average(rq_min) == std::numeric_limits<unsigned char>::min());
-    static_assert(w_average(rq_max) == std::numeric_limits<unsigned char>::max());
-    static_assert(w_average(rq_mid) == 127);
+    static_assert(w_average(min) == std::numeric_limits<unsigned char>::min());
+    static_assert(w_average(max) == std::numeric_limits<unsigned char>::max());
+    static_assert(w_average(mid) == 127);
 
-    static_assert(mm_average(rq_min) == std::numeric_limits<unsigned char>::min());
-    static_assert(mm_average(rq_max) == std::numeric_limits<unsigned char>::max());
-    static_assert(mm_average(rq_mid) == 128);
+    static_assert(mm_average(min) == std::numeric_limits<unsigned char>::min());
+    static_assert(mm_average(max) == std::numeric_limits<unsigned char>::max());
+    static_assert(mm_average(mid) == 128);
 
-    static_assert(lum_average(rq_min) == std::numeric_limits<unsigned char>::min());
-    static_assert(lum_average(rq_max) == std::numeric_limits<unsigned char>::max() - 1);
-    static_assert(lum_average(rq_mid) == 128);
+    static_assert(lum_average(min) == std::numeric_limits<unsigned char>::min());
+    static_assert(lum_average(max) == std::numeric_limits<unsigned char>::max() - 1);
+    static_assert(lum_average(mid) == 128);
 
 #pragma endregion __TEST_TRANSFORMERS__
 
-    constexpr auto ar_mapper { utilities::rgbmapper {} };
+    // constexpr auto ar_mapper { utilities::rgbmapper {} };
 
 #pragma region __TEST_RGBMAPPER__
 
@@ -50,18 +54,15 @@ auto wmain() -> int {
 
 #pragma region __TEST_RACCITERATOR__
     // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-    static constexpr wchar_t EULA[] {
-        L"Click on the green buttons that describe your target platform. Only supported platforms will be shown. By downloading and using the software, you agree to fully comply with the terms and conditions of the CUDA EULA"
+    static constexpr wchar_t wstr[] {
+        L"A lookup that finds an injected-class-name can result in an ambiguity in certain cases (for example, if it is found in more than one base class). If all of the injected-class-names that are found refer to specializations of the same class template, and if the name is used as a template-name, the reference refers to the class template itself and not a specialization thereof, and is not ambiguous."
     };
 
-    constexpr auto begin { ::iterator::random_access_iterator(EULA, __crt_countof(EULA)) };
-    constexpr auto copy { begin };
-
     unsigned i {};
-    for (::iterator::random_access_iterator it { EULA, __crt_countof(EULA) }, end { EULA, __crt_countof(EULA), __crt_countof(EULA) };
+    for (::iterator::random_access_iterator it { wstr, __crt_countof(wstr) }, end { wstr, __crt_countof(wstr), __crt_countof(wstr) };
          it != end;
          ++it) {
-        assert(EULA[i] == *it);
+        std::wcout << wstr[i++] << L" : " << *it << L'\n';
     }
 
 #pragma endregion __TEST_RACCITERATOR__

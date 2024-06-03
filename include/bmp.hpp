@@ -117,7 +117,7 @@ namespace bmp {
             using const_reference = const RGBQUAD&;
             using difference_type = ptrdiff_t;
             using iterator        = iterator::random_access_iterator<value_type>;
-            using const_iterator  = iterator::random_access_iterator<const value_type>;
+            using const_iterator  = typename iterator::random_access_iterator<const value_type>;
 
         private:
             size_type        _fsize;        // file size on disk
@@ -149,7 +149,7 @@ namespace bmp {
                 // handle pixel buffer and raw buffer
                 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
                 ::fwprintf_s(stderr, L"Error in %s @ line %d: empty buffer received!\n", __FUNCTIONW__, __LINE__);
-                std::copy();
+                //  std::copy();
             }
 
             constexpr bmp(bmp&& other) noexcept :
@@ -252,24 +252,24 @@ namespace bmp {
                 // NOLINTEND(cppcoreguidelines-pro-type-vararg)
             }
 
-            constexpr iterator begin() noexcept { }
+            constexpr iterator begin() noexcept { return { _pixel_buffer, _npixels }; }
 
-            constexpr const_iterator begin() const noexcept { }
+            constexpr const_iterator begin() const noexcept { return { _pixel_buffer, _npixels }; }
 
-            constexpr const_iterator cbegin() const noexcept { }
+            constexpr const_iterator cbegin() const noexcept { return { _pixel_buffer, _npixels }; }
 
-            constexpr iterator end() noexcept { }
+            constexpr iterator end() noexcept { return { _pixel_buffer, _npixels, _npixels }; }
 
-            constexpr const_iterator end() const noexcept { }
+            constexpr const_iterator end() const noexcept { return { _pixel_buffer, _npixels, _npixels }; }
 
-            constexpr const_iterator cend() const noexcept { }
+            constexpr const_iterator cend() const noexcept { return { _pixel_buffer, _npixels, _npixels }; }
 
-            constexpr pointer data() noexcept { }
+            constexpr pointer data() noexcept { return _pixel_buffer; }
 
-            constexpr const_pointer data() const noexcept { }
+            constexpr const_pointer data() const noexcept { return _pixel_buffer; }
 
             __forceinline std::wstring __stdcall tostring() noexcept {
-                return (image->infhead.biWidth <= 140) ? to_string(image) : to_downscaled_string(image);
+                return (_infhead.biWidth <= 140) ? to_string(this) : to_downscaled_string(this);
             }
     };
 
