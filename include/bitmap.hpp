@@ -1,74 +1,18 @@
 #pragma once
 
-// clang-format off
-#define _AMD64_
-#define WIN32_LEAN_AND_MEAN
-#define WIN32_EXTRA_MEAN
-#define NOMINMAX
-#include <windef.h>
-#include <wingdi.h>
-#include <fileapi.h>
-#include <errhandlingapi.h>
-#include <handleapi.h>
-// clang-format on
-
 #include <cassert>
 #include <cstdint>
-#include <optional>
 
 #include <utilities.hpp>
 
-[[nodiscard("expensive")]] static inline std::optional<uint8_t*> open(
-    _In_ const wchar_t* const filename, _Inout_ unsigned* const rbytes
-) noexcept {
-    DWORD          nbytes {};
-    LARGE_INTEGER  liFsize { .QuadPart = 0LLU };
-    const HANDLE64 hFile { ::CreateFileW(filename, GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, nullptr) };
-    uint8_t*       buffer {};
-    BOOL           bReadStatus {};
-
-    if (hFile == INVALID_HANDLE_VALUE) {
-        ::fwprintf_s(stderr, L"Error %lu in CreateFileW\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
-        goto INVALID_HANDLE_ERR;
-    }
-
-    if (!::GetFileSizeEx(hFile, &liFsize)) {                                     // NOLINT(readability-implicit-bool-conversion)
-        ::fwprintf_s(stderr, L"Error %lu in GetFileSizeEx\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
-        goto GET_FILESIZE_ERR;
-    }
-
-    buffer = new (std::nothrow) uint8_t[liFsize.QuadPart];
-    if (!buffer) {                                                         // NOLINT(readability-implicit-bool-conversion)
-        ::fputws(L"Memory allocation error in utilities::open\n", stderr); // NOLINT(cppcoreguidelines-pro-type-vararg)
-        goto GET_FILESIZE_ERR;
-    }
-
-    bReadStatus = ::ReadFile(hFile, buffer, liFsize.QuadPart, &nbytes, nullptr);
-    if (!bReadStatus) {                                                     // NOLINT(readability-implicit-bool-conversion)
-        ::fwprintf_s(stderr, L"Error %lu in ReadFile\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
-        goto GET_FILESIZE_ERR;
-    }
-
-    ::CloseHandle(hFile);
-    *rbytes = nbytes;
-    return buffer;
-
-GET_FILESIZE_ERR:
-    delete[] buffer;
-    ::CloseHandle(hFile);
-INVALID_HANDLE_ERR:
-    *rbytes = 0;
-    return std::nullopt;
-}
-
-namespace bmp {
+namespace bitmap {
 
     // BMP files store this tag as 'B', followed by 'M', i.e 0x424D as an unsigned 16 bit integer,
     // when we dereference this 16 bits as an unsigned 16 bit integer on LE machines, the byte order will get swapped i.e the two bytes will be read as 'M', 'B'
     constexpr unsigned short start_tag_be { L'B' << 8 | L'M' };
     constexpr unsigned short start_tag_le { L'M' << 8 | L'B' };
 
-    static inline BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
+    static BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) noexcept {
         assert(size >= sizeof(BITMAPFILEHEADER));
         BITMAPFILEHEADER header { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
@@ -273,4 +217,4 @@ namespace bmp {
             }
     };
 
-} // namespace bmp
+} // namespace bitmap

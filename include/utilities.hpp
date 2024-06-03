@@ -7,11 +7,15 @@
 #define NOMINMAX
 #include <windef.h>
 #include <wingdi.h>
+#include <fileapi.h>
+#include <errhandlingapi.h>
+#include <handleapi.h>
 // clang-format on
 
 #include <array>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <type_traits>
 
 // this is how wingdi defines these two structs!!
@@ -27,8 +31,50 @@
 //         BYTE rgbRed;
 //         BYTE rgbReserved;
 // } RGBQUAD;
-
 // we cannot make templates work with both RGBTRIPLE & RGBQUAD because they have different member names!
+
+[[nodiscard("expensive")]] static inline std::optional<uint8_t*> open(
+    _In_ const wchar_t* const filename, _Inout_ unsigned* const rbytes
+) noexcept {
+    DWORD          nbytes {};
+    LARGE_INTEGER  liFsize { .QuadPart = 0LLU };
+    const HANDLE64 hFile { ::CreateFileW(filename, GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, nullptr) };
+    uint8_t*       buffer {};
+    BOOL           bReadStatus {};
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ::fwprintf_s(stderr, L"Error %lu in CreateFileW\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
+        goto INVALID_HANDLE_ERR;
+    }
+
+    if (!::GetFileSizeEx(hFile, &liFsize)) {                                     // NOLINT(readability-implicit-bool-conversion)
+        ::fwprintf_s(stderr, L"Error %lu in GetFileSizeEx\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
+        goto GET_FILESIZE_ERR;
+    }
+
+    buffer = new (std::nothrow) uint8_t[liFsize.QuadPart];
+    if (!buffer) {                                                         // NOLINT(readability-implicit-bool-conversion)
+        ::fputws(L"Memory allocation error in utilities::open\n", stderr); // NOLINT(cppcoreguidelines-pro-type-vararg)
+        goto GET_FILESIZE_ERR;
+    }
+
+    bReadStatus = ::ReadFile(hFile, buffer, liFsize.QuadPart, &nbytes, nullptr);
+    if (!bReadStatus) {                                                     // NOLINT(readability-implicit-bool-conversion)
+        ::fwprintf_s(stderr, L"Error %lu in ReadFile\n", ::GetLastError()); // NOLINT(cppcoreguidelines-pro-type-vararg)
+        goto GET_FILESIZE_ERR;
+    }
+
+    ::CloseHandle(hFile);
+    *rbytes = nbytes;
+    return buffer;
+
+GET_FILESIZE_ERR:
+    delete[] buffer;
+    ::CloseHandle(hFile);
+INVALID_HANDLE_ERR:
+    *rbytes = 0;
+    return std::nullopt;
+}
 
 namespace palettes {
 
@@ -92,7 +138,8 @@ namespace transformers {
 namespace utilities {
 
     // a composer that uses a specified pair of palette and RGB to BW mapper to return an appropriate wchar_t
-    template<typename transformer_type, unsigned plength> class rgbmapper final {
+    template<typename transformer_type = transformers::weighted_average, unsigned plength = palettes::palette_extended.size()>
+    class rgbmapper final {
         public:
             using size_type      = unsigned;         // will be used to index into the palette buffer
             using value_type     = wchar_t;          // return type of operator()

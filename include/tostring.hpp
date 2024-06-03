@@ -52,7 +52,7 @@ namespace ascii {
         }
 
         assert(caret == nwchars);
-        return (buffer_t) { buffer, caret };
+        return buffer;
     }
 
     // generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width. (140
@@ -129,7 +129,7 @@ namespace ascii {
         }
         // wprintf_s(L"caret %5zu, nwchars %5zu\n", caret, nwchars);
         // assert(caret == nwchars); not likely :(
-        return (buffer_t) { buffer, caret };
+        return buffer;
     }
 
 } // namespace ascii
