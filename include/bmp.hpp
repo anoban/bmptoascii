@@ -18,9 +18,6 @@
 
 #include <utilities.hpp>
 
-static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "BITMAPINFOHEADER is expected to be 40 bytes in size, but is not so!");
-static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "BITMAPFILEHEADER is expected to be 14 bytes in size, but is not so!");
-
 [[nodiscard("expensive")]] static inline std::optional<uint8_t*> open(
     _In_ const wchar_t* const filename, _Inout_ unsigned* const rbytes
 ) noexcept {
@@ -110,17 +107,17 @@ namespace bmp {
         return header;
     }
 
-    template<typename pixel_type> requires ::is_rgb<pixel_type> class bmp final { // class representing a Windows BMP image.
+    class bmp final { // class representing a Windows BMP image.
         public:
             using size_type       = unsigned long long;
-            using value_type      = std::remove_cv_t<pixel_type>;
-            using pointer         = std::remove_cv_t<pixel_type>*;
-            using const_pointer   = const std::remove_cv_t<pixel_type>*;
-            using reference       = std::remove_cv_t<pixel_type>&;
-            using const_reference = const std::remove_cv_t<pixel_type>&;
+            using value_type      = RGBQUAD;
+            using pointer         = RGBQUAD*;
+            using const_pointer   = const RGBQUAD*;
+            using reference       = RGBQUAD&;
+            using const_reference = const RGBQUAD&;
             using difference_type = ptrdiff_t;
             using iterator        = iterator::random_access_iterator<value_type>;
-            using const_iterator  = iterator::template random_access_iterator<const value_type>;
+            using const_iterator  = iterator::random_access_iterator<const value_type>;
 
         private:
             size_type        _fsize;        // file size on disk
