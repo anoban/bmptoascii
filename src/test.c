@@ -1,3 +1,5 @@
+// clang .\src\test.c -I .\include\ -Wall -Wextra -O3 -pedantic -march=native -std=c23 -D__TEST_BMPT_ASCII__
+
 #ifdef __TEST_BMPT_ASCII__
     #define __WANT_PRIMITIVE_TRANSFORMERS__
 
@@ -67,7 +69,7 @@ int wmain(void) {
     #pragma endregion __TEST_TRANSFORMERS__
 
     #pragma region __TEST_RGBMAPPER__
-    RGBQUAD        temp = { 0 };
+    RGBQUAD temp = { 0 };
 
     for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
         for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
@@ -95,9 +97,32 @@ int wmain(void) {
             }
         }
     }
+
+    for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
+        for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
+            for (unsigned red = 0; red <= UCHAR_MAX; ++red) {
+                // make sure none of the below raise an access violation exception!
+                arithmetic_blockmapper(blue, green, red, palette, __crt_countof(palette));
+                arithmetic_blockmapper(blue, green, red, palette_minimal, __crt_countof(palette_minimal));
+                arithmetic_blockmapper(blue, green, red, palette_extended, __crt_countof(palette_extended));
+
+                weighted_blockmapper(blue, green, red, palette, __crt_countof(palette));
+                weighted_blockmapper(blue, green, red, palette_minimal, __crt_countof(palette_minimal));
+                weighted_blockmapper(blue, green, red, palette_extended, __crt_countof(palette_extended));
+
+                minmax_blockmapper(blue, green, red, palette, __crt_countof(palette));
+                minmax_blockmapper(blue, green, red, palette_minimal, __crt_countof(palette_minimal));
+                minmax_blockmapper(blue, green, red, palette_extended, __crt_countof(palette_extended));
+
+                luminosity_blockmapper(blue, green, red, palette, __crt_countof(palette));
+                luminosity_blockmapper(blue, green, red, palette_minimal, __crt_countof(palette_minimal));
+                luminosity_blockmapper(blue, green, red, palette_extended, __crt_countof(palette_extended));
+            }
+        }
+    }
     #pragma endregion __TEST_RGBMAPPER__
 
-    #pragma region         __TEST_PARSERS__
+    #pragma region __TEST_PARSERS__
     const BITMAPFILEHEADER bmpfh = parse_fileheader(dummybmp, __crt_countof(dummybmp));
     assert(bmpfh.bfType == start_tag_le);
     assert(bmpfh.bfSize == 1409334); // size of the image where this buffer was extracted from, in bytes

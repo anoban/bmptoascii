@@ -69,7 +69,7 @@ static inline BITMAP_PIXEL_ORDERING get_pixel_order(_In_ const BITMAPINFOHEADER*
 }
 
 // reads in a bmp file from disk and deserializes it into a bitmap_t struct
-bitmap_t bitmap_read(_In_ const wchar_t* const restrict filepath) {
+static inline bitmap_t bitmap_read(_In_ const wchar_t* const restrict filepath) {
     unsigned size               = 0;
     bitmap_t image              = { 0 }; // will be used as an empty placeholder for premature returns until members are properly assigned
 
@@ -91,10 +91,13 @@ bitmap_t bitmap_read(_In_ const wchar_t* const restrict filepath) {
     return image;
 }
 
-bool bitmap_close(_In_ const bitmap_t* const restrict image) { }
+static inline void bitmap_close(_In_ bitmap_t* const restrict image) {
+    free(image->_pixels);
+    memset(image, 0u, sizeof(bitmap_t));
+}
 
 // prints out information about the passed BMP file
-void bitmap_info(_In_ const bitmap_t* const restrict image) {
+static inline void bitmap_info(_In_ const bitmap_t* const restrict image) {
     wprintf_s(
         L"|---------------------------------------------------------------------------|\n"
         L" %s bitmap image (%3.4Lf MiBs)\n"
