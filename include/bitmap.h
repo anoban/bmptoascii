@@ -6,10 +6,10 @@
 
 // a struct representing a BMP image
 typedef struct bitmap {
-        BITMAPFILEHEADER fileheader;
-        BITMAPINFOHEADER infoheader;
-        RGBQUAD*         pixels; // this points to the start of pixels in the file buffer i.e (buffer + 54)
-        uint8_t*         buffer; // this will point to the original file buffer, this is the one that needs deallocation!
+        BITMAPFILEHEADER _fileheader;
+        BITMAPINFOHEADER _infoheader;
+        RGBQUAD*         _pixels; // this points to the start of pixels in the file buffer i.e (buffer + 54)
+        uint8_t*         _buffer; // this will point to the original file buffer, this is the one that needs deallocation!
 } bitmap_t;
 
 // order of pixels in the BMP buffer.

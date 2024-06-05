@@ -111,15 +111,33 @@ static inline unsigned luminosity(_In_ const RGBQUAD* const restrict _pixel) {
 
 typedef enum {} TRANSFORMER_TYPE;
 
-// a composer that uses a specified pair of palette and RGB to BW mapper to return an appropriate wchar_t
-static inline wchar_t __stdcall pixel_mapper(
-    _In_ const RGBQUAD* const restrict _pixel,
-    _In_ const wchar_t* const restrict _palette,
-    _In_ const unsigned _palette_len,
-    _In_ const unsigned (*_rgbtransformer)(_In_ const RGBQUAD* const restrict)
+// a series of composers that use a specified palette and premediated RGB to BW mapper to map an RGB pixel to an appropriate wchar_t
+// could use a function pointer to take in the transformer of choice, but will make the performance terrible!
+static inline wchar_t __stdcall arithmetic_mapper(
+    _In_ const RGBQUAD* const restrict _pixel, _In_ const wchar_t* const restrict _palette, _In_ const unsigned _palette_len
 ) {
-    // _rgbtransformer(_pixel) can range from 0 to 255
-    const unsigned _offset = _rgbtransformer(_pixel);
-    // hence, _offset / static_cast<float>(stdnumeric_limits<unsigned char>max()) can range from 0.0 to 1.0
-    return _palette[_offset ? (_offset / (float) (UCHAR_MAX) *_palette_len) - 1 : 0];
+    const unsigned _offset = arithmetic_average(_pixel); // can range from 0 to 255
+    // hence, _offset / (float)(UCHAR_MAX) can range from 0.0 to 1.0
+    return _palette[_offset ? (unsigned) ((_offset / (float) (UCHAR_MAX)) * _palette_len) - 1 : 0];
+}
+
+static inline wchar_t __stdcall weighted_mapper(
+    _In_ const RGBQUAD* const restrict _pixel, _In_ const wchar_t* const restrict _palette, _In_ const unsigned _palette_len
+) {
+    const unsigned _offset = weighted_average(_pixel);
+    return _palette[_offset ? (unsigned) ((_offset / (float) (UCHAR_MAX)) * _palette_len) - 1 : 0];
+}
+
+static inline wchar_t __stdcall minmax_mapper(
+    _In_ const RGBQUAD* const restrict _pixel, _In_ const wchar_t* const restrict _palette, _In_ const unsigned _palette_len
+) {
+    const unsigned _offset = minmax_average(_pixel);
+    return _palette[_offset ? (unsigned) ((_offset / (float) (UCHAR_MAX)) * _palette_len) - 1 : 0];
+}
+
+static inline wchar_t __stdcall luminosity_mapper(
+    _In_ const RGBQUAD* const restrict _pixel, _In_ const wchar_t* const restrict _palette, _In_ const unsigned _palette_len
+) {
+    const unsigned _offset = luminosity(_pixel);
+    return _palette[_offset ? (unsigned) ((_offset / (float) (UCHAR_MAX)) * _palette_len) - 1 : 0];
 }
