@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <string>
 
-#include <bmp.hpp>
+#include <bitmap.hpp>
 
 namespace ascii {
 

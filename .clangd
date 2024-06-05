@@ -1,6 +1,6 @@
 CompileFlags:
-  Add: [-Wall, -Wextra, -pedantic, -O0, -std=c++23, -c]
-  Compiler:  clang++.exe
+  Add: [-Wall, -Wextra, -pedantic, -O0, -std=c23, -c, -I./]
+  Compiler:  clang.exe
   CompilationDatabase: None
 
 Completion:
