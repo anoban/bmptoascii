@@ -5,19 +5,25 @@
 #include <utilities.h>
 
 // a struct representing a BMP image
-typedef struct bmp {
+typedef struct bitmap {
         BITMAPFILEHEADER fileheader;
         BITMAPINFOHEADER infoheader;
         RGBQUAD*         pixels; // this points to the start of pixels in the file buffer i.e (buffer + 54)
         uint8_t*         buffer; // this will point to the original file buffer, this is the one that needs deallocation!
-} bmp_t;
+} bitmap_t;
+
+// order of pixels in the BMP buffer.
+typedef enum { TOPDOWN, BOTTOMUP } BMPPIXDATAORDERING;
+
+// types of compressions used in BMP files.
+typedef enum { RGB, RLE8, RLE4, BITFIELDS, UNKNOWN } COMPRESSIONKIND;
 
 // BMP files store this tag as 'B', followed by 'M', i.e 0x424D as an unsigned 16 bit integer,
 // when we dereference this 16 bits as an unsigned 16 bit integer on LE machines, the byte order will get swapped i.e the two bytes will be read as 'M', 'B'
 const unsigned short start_tag_be = L'B' << 8 | L'M';
 const unsigned short start_tag_le = L'M' << 8 | L'B';
 
-static BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const restrict imstream, _In_ const unsigned size) {
+static BITMAPFILEHEADER __stdcall parse_fileheader(_In_ const uint8_t* const restrict imstream, _In_ const unsigned size) {
     assert(size >= sizeof(BITMAPFILEHEADER));
     BITMAPFILEHEADER header = { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
@@ -31,7 +37,7 @@ static BITMAPFILEHEADER __stdcall parsefileheader(_In_ const uint8_t* const rest
     return header;
 }
 
-static inline BITMAPINFOHEADER __stdcall parseinfoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) {
+static inline BITMAPINFOHEADER __stdcall parse_infoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) {
     assert(size >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
     BITMAPINFOHEADER header = { 0 };
 
@@ -55,18 +61,22 @@ static inline BITMAPINFOHEADER __stdcall parseinfoheader(_In_ const uint8_t* con
     return header;
 }
 
-bmp_t BmpRead(_In_ const wchar_t* const restrict filepath) {
-    size_t size                 = 0;
-    bmp_t  image                = { 0 }; // will be used as an empty placeholder for premature returns until members are properly assigned
+static inline BMPPIXDATAORDERING get_pixel_order(_In_ const BITMAPINFOHEADER* const restrict header) {
+    return (header->biHeight >= 0) ? BOTTOMUP : TOPDOWN;
+}
 
-    const uint8_t* const buffer = Open(filepath, &size); // HeapFree()
-    if (!buffer) return image;                           // Open will do the error reporting, so just exiting the function is enough
+bitmap_t bitmap_read(_In_ const wchar_t* const restrict filepath) {
+    unsigned size               = 0;
+    bitmap_t image              = { 0 }; // will be used as an empty placeholder for premature returns until members are properly assigned
 
-    const BITMAPFILEHEADER fhead = ParseFileHeader(buffer, size); // 14 bytes (packed)
-    if (!fhead.bfSize) return image; // again ParseFileHeader will report errors, if the predicate isn't satisified, exit the routine
+    const uint8_t* const buffer = open(filepath, &size);
+    if (!buffer) return image; // open will do the error reporting, so just exiting the function is enough
 
-    const BITMAPINFOHEADER infhead = ParseInfoHeader(buffer, size); // 40 bytes (packed)
-    if (!infhead.biSize) return image;                              // error reporting is handled by ParseInfoHeader
+    const BITMAPFILEHEADER fhead = parse_fileheader(buffer, size); // 14 bytes (packed)
+    if (!fhead.bfSize) return image; // again parse_fileheader will report errors, if the predicate isn't satisified, exit the routine
+
+    const BITMAPINFOHEADER infhead = parse_infoheader(buffer, size); // 40 bytes (packed)
+    if (!infhead.biSize) return image;                               // error reporting is handled by parse_infoheader
 
     // creating and using a new buffer to only store pixels sounds like a clean idea but it brings a string of performance issues
     // 1) an additional heap allocation for the new buffer and deallocation of the original buffer
@@ -102,7 +112,7 @@ bmp_t BmpRead(_In_ const wchar_t* const restrict filepath) {
 }
 
 // prints out information about the passed BMP file
-void BmpInfo(_In_ const bmp_t* const image) {
+void bitmap_info(_In_ const bitmap_t* const restrict image) {
     wprintf_s(
         L"|---------------------------------------------------------------------------|"
         L"%15s bitmap image (%3.4Lf MiBs)\n"
@@ -113,7 +123,7 @@ void BmpInfo(_In_ const bmp_t* const image) {
         L"|---------------------------------------------------------------------------|",
         image->infoheader.biSizeImage ? L"Compressed" : L"Uncompressed",
         image->fileheader.bfSize / (1024.0L * 1024.0L),
-        GetPixelOrder(image->infoheader) == BOTTOMUP ? L"bottom-up" : L"top-down",
+        get_pixel_order(&image->infoheader) == BOTTOMUP ? L"bottom-up" : L"top-down",
         image->infoheader.biWidth,
         image->infoheader.biHeight,
         image->infoheader.biBitCount,
@@ -131,5 +141,4 @@ void BmpInfo(_In_ const bmp_t* const image) {
             default        : break;
         }
     }
-    return;
 }

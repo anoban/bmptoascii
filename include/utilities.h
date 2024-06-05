@@ -86,34 +86,40 @@ static const wchar_t palette_extended[] = { L' ',  L'.', L'\'', L'`', L'^', L'"'
                                             L'k',  L'h', L'a',  L'o', L'*', L'#', L'M', L'W', L'&', L'8', L'%', L'B', L'@', L'$' };
 
 // arithmetic average of an RGB pixel values
-static inline unsigned __stdcall arithmetic_average(_In_ const RGBQUAD* const restrict pixel) {
+static inline unsigned __stdcall arithmetic_average(_In_ const RGBQUAD* const restrict _pixel) {
     // we don't want overflows or truncations here
-    return (((double) (pixel->rgbBlue)) + pixel->rgbGreen + pixel->rgbRed) / 3.000;
+    return (((double) (_pixel->rgbBlue)) + _pixel->rgbGreen + _pixel->rgbRed) / 3.000;
 }
 
 // weighted average of an RGB pixel values
-static inline unsigned __stdcall weighted_average(_In_ const RGBQUAD* const restrict pixel) {
-    return pixel->rgbBlue * 0.299 + pixel->rgbGreen * 0.587 + pixel->rgbRed * 0.114;
+static inline unsigned __stdcall weighted_average(_In_ const RGBQUAD* const restrict _pixel) {
+    return _pixel->rgbBlue * 0.299 + _pixel->rgbGreen * 0.587 + _pixel->rgbRed * 0.114;
 }
 
 // average of minimum and maximum RGB values in a pixel
-static inline unsigned minmax_average(_In_ const RGBQUAD* const restrict pixel) {
+static inline unsigned minmax_average(_In_ const RGBQUAD* const restrict _pixel) {
     // we don't want overflows or truncations here
-    return (((double) (min(min(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed))) +
-            (max(max(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed))) /
+    return (((double) (min(min(_pixel->rgbBlue, _pixel->rgbGreen), _pixel->rgbRed))) +
+            (max(max(_pixel->rgbBlue, _pixel->rgbGreen), _pixel->rgbRed))) /
            2.0000;
 }
 
 // luminosity of an RGB pixel
-static inline unsigned luminosity(_In_ const RGBQUAD* const restrict pixel) {
-    return pixel->rgbBlue * 0.2126 + pixel->rgbGreen * 0.7152 + pixel->rgbRed * 0.0722;
+static inline unsigned luminosity(_In_ const RGBQUAD* const restrict _pixel) {
+    return _pixel->rgbBlue * 0.2126 + _pixel->rgbGreen * 0.7152 + _pixel->rgbRed * 0.0722;
 }
 
+typedef enum {} TRANSFORMER_TYPE;
+
 // a composer that uses a specified pair of palette and RGB to BW mapper to return an appropriate wchar_t
-// gives the wchar_t corresponding to the provided RGB pixel
-static inline wchar_t __stdcall mapper(const RGBQUAD* const restrict pixel) {
-    // _rgbtransformer(pixel) can range from 0 to 255
-    const auto _offset { _rgbtransformer(pixel) };
+static inline wchar_t __stdcall pixel_mapper(
+    _In_ const RGBQUAD* const restrict _pixel,
+    _In_ const wchar_t* const restrict _palette,
+    _In_ const unsigned _palette_len,
+    _In_ const unsigned (*_rgbtransformer)(_In_ const RGBQUAD* const restrict)
+) {
+    // _rgbtransformer(_pixel) can range from 0 to 255
+    const unsigned _offset = _rgbtransformer(_pixel);
     // hence, _offset / static_cast<float>(stdnumeric_limits<unsigned char>max()) can range from 0.0 to 1.0
-    return _palette[_offset ? (_offset / static_cast<float>(stdnumeric_limits<unsigned char> max()) * _palette_len) - 1 : 0];
+    return _palette[_offset ? (_offset / (float) (UCHAR_MAX) *_palette_len) - 1 : 0];
 }
