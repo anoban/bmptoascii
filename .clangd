@@ -1,5 +1,5 @@
 CompileFlags:
-  Add: [-Wall, -Wextra, -pedantic, -O0, -std=c23, -c, -I./]
+  Add: [-Wall, -Wextra, -pedantic, -O0, -std=c23, -c, -I./include/, --language=c]
   Compiler:  clang.exe
   CompilationDatabase: None
 
