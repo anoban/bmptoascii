@@ -1,15 +1,14 @@
-// clang .\src\test.c -I.\include\ -std=c23 -O3 -Wall -Wextra -pedantic -march=native
+#ifdef __TEST_BMPT_ASCII__
+    #define __WANT_PRIMITIVE_TRANSFORMERS__
 
-// #ifdef __TEST_BMPT_ASCII__
-
-#include <bitmap.h>
+    #include <tostring.h>
 
 static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "BITMAPINFOHEADER is expected to be 40 bytes in size, but is not so!");
 static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "BITMAPFILEHEADER is expected to be 14 bytes in size, but is not so!");
 
-static const RGBQUAD min { 0x00, 0x00, 0x00, 0xFF };
-static const RGBQUAD mid { 0x80, 0x80, 0x80, 0xFF };
-static const RGBQUAD max { 0xFF, 0xFF, 0xFF, 0xFF };
+static const RGBQUAD min                    = { .rgbBlue = 0x00, .rgbGreen = 0x00, .rgbRed = 0x00, .rgbReserved = 0xFF };
+static const RGBQUAD mid                    = { .rgbBlue = 0x80, .rgbGreen = 0x80, .rgbRed = 0x80, .rgbReserved = 0xFF };
+static const RGBQUAD max                    = { .rgbBlue = 0xFF, .rgbGreen = 0xFF, .rgbRed = 0xFF, .rgbReserved = 0xFF };
 
 // a 300 byte chunk extracted from a real BMP file, for testing
 static const unsigned char const dummybmp[] = {
@@ -25,17 +24,14 @@ static const unsigned char const dummybmp[] = {
     19, 255, 8,  8,   20, 255, 8,   8,  20, 255, 8,   8
 };
 
-int            wmain(void) {
-#pragma region __TEST_BMP_STARTTAG__
-
+int wmain(void) {
+    #pragma region __TEST_BMP_STARTTAG__
     assert(start_tag_be == 0x424D);
     assert(start_tag_le == 0x4D42);
     assert(*(unsigned short*) (dummybmp) == start_tag_le);
+    #pragma endregion __TEST_BMP_STARTTAG__
 
-#pragma endregion __TEST_BMP_STARTTAG__
-
-#pragma region __TEST_TRANSFORMERS__
-
+    #pragma region __TEST_TRANSFORMERS__
     assert(arithmetic_average(&min) == 0);
     assert(arithmetic_average(&max) == UCHAR_MAX);
     assert(arithmetic_average(&mid) == 128);
@@ -52,26 +48,82 @@ int            wmain(void) {
     assert(luminosity(&max) == UCHAR_MAX - 1);
     assert(luminosity(&mid) == 128);
 
-#pragma endregion __TEST_TRANSFORMERS__
+    RGBQUAD test = { 0x00, 0x00, 0x00, 0xFF };
 
-    constexpr auto ar_mapper { utilities::rgbmapper {} };
+    for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
+        for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
+            for (unsigned red = 0; red <= UCHAR_MAX; ++red) {
+                test.rgbBlue  = blue;
+                test.rgbGreen = green;
+                test.rgbRed   = red;
+                // unsigned returns will always be greater than or equal to 0, so not testing against 0
+                assert(arithmetic_average(&test) <= UCHAR_MAX);
+                assert(weighted_average(&test) <= UCHAR_MAX);
+                assert(minmax_average(&test) <= UCHAR_MAX);
+                assert(luminosity(&test) <= UCHAR_MAX);
+            }
+        }
+    }
+    #pragma endregion __TEST_TRANSFORMERS__
 
-#pragma region __TEST_RGBMAPPER__
+    #pragma region __TEST_RGBMAPPER__
+    RGBQUAD        temp = { 0 };
 
-#pragma endregion __TEST_RGBMAPPER__
+    for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
+        for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
+            for (unsigned red = 0; red <= UCHAR_MAX; ++red) {
+                temp.rgbBlue  = blue;
+                temp.rgbGreen = green;
+                temp.rgbRed   = red;
 
-#pragma region __TEST_PARSERS__
+                // make sure none of the below raise an access violation exception!
+                arithmetic_mapper(&temp, palette, __crt_countof(palette));
+                arithmetic_mapper(&temp, palette_minimal, __crt_countof(palette_minimal));
+                arithmetic_mapper(&temp, palette_extended, __crt_countof(palette_extended));
 
-    const auto fheader { bitmap::parsefileheader(dummybmp, std::size(dummybmp)) };
-    const auto infoheader { bitmap::parseinfoheader(dummybmp, std::size(dummybmp)) };
+                weighted_mapper(&temp, palette, __crt_countof(palette));
+                weighted_mapper(&temp, palette_minimal, __crt_countof(palette_minimal));
+                weighted_mapper(&temp, palette_extended, __crt_countof(palette_extended));
 
-#pragma endregion __TEST_PARSERS__
+                minmax_mapper(&temp, palette, __crt_countof(palette));
+                minmax_mapper(&temp, palette_minimal, __crt_countof(palette_minimal));
+                minmax_mapper(&temp, palette_extended, __crt_countof(palette_extended));
 
-#pragma region __TEST_FAILS__ // regions for tests that will & must fail
+                luminosity_mapper(&temp, palette, __crt_countof(palette));
+                luminosity_mapper(&temp, palette_minimal, __crt_countof(palette_minimal));
+                luminosity_mapper(&temp, palette_extended, __crt_countof(palette_extended));
+            }
+        }
+    }
+    #pragma endregion __TEST_RGBMAPPER__
 
-#pragma endregion __TEST_FAILS__
+    #pragma region         __TEST_PARSERS__
+    const BITMAPFILEHEADER bmpfh = parse_fileheader(dummybmp, __crt_countof(dummybmp));
+    assert(bmpfh.bfType == start_tag_le);
+    assert(bmpfh.bfSize == 1409334); // size of the image where this buffer was extracted from, in bytes
+    assert(bmpfh.bfReserved1 == 0);
+    assert(bmpfh.bfReserved2 == 0);
+    assert(bmpfh.bfOffBits == 54);
 
+    const BITMAPINFOHEADER bmpinfh = parse_infoheader(dummybmp, __crt_countof(dummybmp));
+    assert(bmpinfh.biSize == 40); // header size
+    assert(bmpinfh.biWidth == 734);
+    assert(bmpinfh.biHeight == 480);
+    assert(bmpinfh.biPlanes == 1);
+    assert(bmpinfh.biBitCount == 32);
+    assert(bmpinfh.biCompression == 0);
+    assert(bmpinfh.biSizeImage == 0);
+    assert(bmpinfh.biXPelsPerMeter == 3780);
+    assert(bmpinfh.biYPelsPerMeter == 3780);
+    assert(bmpinfh.biClrUsed == 0);
+    assert(bmpinfh.biClrImportant == 0);
+
+    const BITMAP_PIXEL_ORDERING order = get_pixel_order(&bmpinfh);
+    assert(order == BOTTOMUP);
+    #pragma endregion __TEST_PARSERS__
+
+    _putws(L"all's good :)");
     return EXIT_SUCCESS;
 }
 
-// #endif // __TEST_BMPT_ASCII__
+#endif // __TEST_BMPT_ASCII__
