@@ -5,7 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // selected palette for RGB to wchar_t mapping
-#define spalette                   palette_extended
+#define spalette                   palette
 
 // transformer to be used for raw string mapping
 #define map(_pixel)                arithmetic_mapper(_pixel, spalette, __crt_countof(spalette))
@@ -14,14 +14,15 @@
 #define blockmap(blue, green, red) weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette))
 
 static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict image) {
-    const int64_t npixels          = (int64_t) image->_infoheader.biHeight * image->_infoheader.biWidth; // total pixels in the image
-    const int64_t nwchars          = npixels + 2LLU * image->_infoheader.biHeight;
+    const int64_t npixels = (int64_t) image->_infoheader.biHeight * image->_infoheader.biWidth; // total pixels in the image
+    const int64_t nwchars /* 1 wchar_t for each pixel + 2 additional wchar_ts for CRLF at the end of each scanline */ =
+        npixels + 2LLU * image->_infoheader.biHeight;
     // space for two extra wchar_ts (L'\r', L'\n') to be appended to the end of each line
 
     wchar_t* const restrict buffer = malloc(nwchars * sizeof(wchar_t));
     if (!buffer) {
         fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
-        return buffer;
+        return NULL;
     }
 
     // pixels are organized in rows from bottom to top and, within each row, from left to right, each row is called a "scan line".
@@ -137,4 +138,7 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
 }
 
 // a context aware dispatcher for to_raw_string and to_downscaled_string
-static inline wchar_t* __stdcall to_string(_In_ const bitmap_t* const restrict image) { }
+static inline wchar_t* __cdecl to_string(_In_ const bitmap_t* const restrict image) {
+    if (image->_infoheader.biWidth <= 140) return to_raw_string(image);
+    return to_downscaled_string(image);
+}

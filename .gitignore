@@ -402,4 +402,8 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+# ignore the bitmaps in the root directory
 *.bmp
+
+# consider the small bitmaps in the ./test directory
+!.test/*.bmp

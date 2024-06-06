@@ -69,7 +69,7 @@ int wmain(void) {
     #pragma endregion __TEST_TRANSFORMERS__
 
     #pragma region __TEST_RGBMAPPER__
-    RGBQUAD temp = { 0 };
+    RGBQUAD        temp = { 0 };
 
     for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
         for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
@@ -122,7 +122,7 @@ int wmain(void) {
     }
     #pragma endregion __TEST_RGBMAPPER__
 
-    #pragma region __TEST_PARSERS__
+    #pragma region         __TEST_PARSERS__
     const BITMAPFILEHEADER bmpfh = parse_fileheader(dummybmp, __crt_countof(dummybmp));
     assert(bmpfh.bfType == start_tag_le);
     assert(bmpfh.bfSize == 1409334); // size of the image where this buffer was extracted from, in bytes
@@ -146,6 +146,45 @@ int wmain(void) {
     const BITMAP_PIXEL_ORDERING order = get_pixel_order(&bmpinfh);
     assert(order == BOTTOMUP);
     #pragma endregion __TEST_PARSERS__
+
+    #pragma region __TEST_FULL__
+    bitmap_t       vendetta                    = bitmap_read(L"./test/vendetta.bmp");
+    const wchar_t* const restrict vendettawstr = to_string(&vendetta);
+    _putws(vendettawstr);
+    _putws(L"\n\n");
+
+    bitmap_t child                          = bitmap_read(L"./test/child.bmp");
+    const wchar_t* const restrict childwstr = to_string(&child);
+    _putws(childwstr);
+    _putws(L"\n\n");
+
+    bitmap_t girl                          = bitmap_read(L"./test/girl.bmp");
+    const wchar_t* const restrict girlwstr = to_string(&girl);
+    _putws(girlwstr);
+    _putws(L"\n\n");
+
+    bitmap_t bobmarley                          = bitmap_read(L"./test/bobmarley.bmp");
+    const wchar_t* const restrict bobmarleywstr = to_string(&bobmarley);
+    _putws(bobmarleywstr);
+    _putws(L"\n\n");
+
+    bitmap_t cubes                          = bitmap_read(L"./test/cubes.bmp");
+    const wchar_t* const restrict cubeswstr = to_string(&cubes);
+    _putws(cubeswstr);
+    _putws(L"\n\n");
+
+    free(vendettawstr);
+    free(childwstr);
+    free(girlwstr);
+    free(bobmarleywstr);
+    free(cubeswstr);
+
+    bitmap_close(&vendetta);
+    bitmap_close(&child);
+    bitmap_close(&girl);
+    bitmap_close(&bobmarley);
+    bitmap_close(&cubes);
+    #pragma endregion __TEST_FULL__
 
     _putws(L"all's good :)");
     return EXIT_SUCCESS;

@@ -91,8 +91,9 @@ static inline bitmap_t bitmap_read(_In_ const wchar_t* const restrict filepath) 
     return image;
 }
 
+// use this to cleanup a bitmap_t after its use
 static inline void bitmap_close(_In_ bitmap_t* const restrict image) {
-    free(image->_pixels);
+    free(image->_buffer);
     memset(image, 0u, sizeof(bitmap_t));
 }
 
