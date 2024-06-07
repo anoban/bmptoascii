@@ -147,43 +147,21 @@ int wmain(void) {
     assert(order == BOTTOMUP);
     #pragma endregion __TEST_PARSERS__
 
-    #pragma region __TEST_FULL__
-    bitmap_t       vendetta                    = bitmap_read(L"./test/vendetta.bmp");
-    const wchar_t* const restrict vendettawstr = to_string(&vendetta);
-    _putws(vendettawstr);
-    _putws(L"\n\n");
+    #pragma region              __TEST_FULL__
+    static const wchar_t* const filenames[] = { L"./test/vendetta.bmp",  L"./test/child.bmp", L"./test/girl.bmp",
+                                                L"./test/bobmarley.bmp", L"./test/cubes.bmp", NULL };
+    // all of these test images will cause to_string to reroute to to_raw_string
+    const wchar_t**             _ptr        = filenames;
+    while (*_ptr) {
+        bitmap_t image                     = bitmap_read(*_ptr);
+        const wchar_t* const restrict wstr = to_string(&image);
+        _putws(wstr);
+        _putws(L"\n\n");
 
-    bitmap_t child                          = bitmap_read(L"./test/child.bmp");
-    const wchar_t* const restrict childwstr = to_string(&child);
-    _putws(childwstr);
-    _putws(L"\n\n");
-
-    bitmap_t girl                          = bitmap_read(L"./test/girl.bmp");
-    const wchar_t* const restrict girlwstr = to_string(&girl);
-    _putws(girlwstr);
-    _putws(L"\n\n");
-
-    bitmap_t bobmarley                          = bitmap_read(L"./test/bobmarley.bmp");
-    const wchar_t* const restrict bobmarleywstr = to_string(&bobmarley);
-    _putws(bobmarleywstr);
-    _putws(L"\n\n");
-
-    bitmap_t cubes                          = bitmap_read(L"./test/cubes.bmp");
-    const wchar_t* const restrict cubeswstr = to_string(&cubes);
-    _putws(cubeswstr);
-    _putws(L"\n\n");
-
-    free(vendettawstr);
-    free(childwstr);
-    free(girlwstr);
-    free(bobmarleywstr);
-    free(cubeswstr);
-
-    bitmap_close(&vendetta);
-    bitmap_close(&child);
-    bitmap_close(&girl);
-    bitmap_close(&bobmarley);
-    bitmap_close(&cubes);
+        free(wstr);
+        bitmap_close(&image);
+        _ptr++;
+    }
     #pragma endregion __TEST_FULL__
 
     _putws(L"all's good :)");
