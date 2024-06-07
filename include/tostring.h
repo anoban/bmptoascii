@@ -4,6 +4,8 @@
 // USE <tostring.h> AS THE MASTER INCLUDE IN C SOURCES SINCE IT INCLUDES <bitmap.h>, WHICH INCLUDES <utilities.h> //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#define CONSOLE_WIDTH              140LLU
+
 // selected palette for RGB to wchar_t mapping
 #define spalette                   palette
 
@@ -67,7 +69,7 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
     const int64_t block_d /* dimension of an individual square block */ = ceill(image->_infoheader.biWidth / 140.0L);
     // even if the image is 150 pixels wide, nblocks_w will be ceill(150 / 140) = 2
     // each pixel block will be 2 pixels wide and 2 pixels tall (this 1:1 dimension of the block helps us preserve the shape of the original image)
-    const int64_t npixels_per_block /* number of pixels in a block */   = block_d * block_d; // since our blocks are square
+    const double  npixels_per_block /* number of pixels in a block */   = block_d * block_d; // since our blocks are square
 
     // we have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent
     // that block as a wchar_t. one wchar_t in our buffer will have to represent (block_w x block_h) number of RGBQUADs
@@ -139,6 +141,6 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
 
 // a context aware dispatcher for to_raw_string and to_downscaled_string
 static inline wchar_t* __cdecl to_string(_In_ const bitmap_t* const restrict image) {
-    if (image->_infoheader.biWidth <= 140) return to_raw_string(image);
+    if (image->_infoheader.biWidth <= CONSOLE_WIDTH) return to_raw_string(image);
     return to_downscaled_string(image);
 }
