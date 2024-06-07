@@ -21,25 +21,25 @@ typedef enum { RGB, RLE8, RLE4, BITFIELDS, UNKNOWN } BITMAP_COMPRESSION_KIND;
 
 // BMP files store this tag as 'B', followed by 'M', i.e 0x424D as an unsigned 16 bit integer,
 // when we dereference this 16 bits as an unsigned 16 bit integer on LE machines, the byte order will get swapped i.e the two bytes will be read as 'M', 'B'
-static const unsigned short start_tag_be = L'B' << 8 | L'M';
-static const unsigned short start_tag_le = L'M' << 8 | L'B';
+static const unsigned short START_TAG_BE = L'B' << 8 | L'M';
+static const unsigned short START_TAG_LE = L'M' << 8 | L'B';
 
-static BITMAPFILEHEADER __stdcall parse_fileheader(_In_ const uint8_t* const restrict imstream, _In_ const unsigned size) {
+static BITMAPFILEHEADER __cdecl parse_fileheader(_In_ const uint8_t* const restrict imstream, _In_ const unsigned size) {
     assert(size >= sizeof(BITMAPFILEHEADER));
     BITMAPFILEHEADER header = { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
-    if (*((uint16_t*) (imstream)) != start_tag_le) {
+    if (*((uint16_t*) (imstream)) != START_TAG_LE) {
         fputws(L"Error in parsefileheader, file appears not to be a Windows BMP file\n", stderr);
         free(imstream);
         return header;
     }
-    header.bfType    = start_tag_le;
+    header.bfType    = START_TAG_LE;
     header.bfSize    = *(uint32_t*) (imstream + 2);
     header.bfOffBits = *(uint32_t*) (imstream + 10);
     return header;
 }
 
-static inline BITMAPINFOHEADER __stdcall parse_infoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) {
+static inline BITMAPINFOHEADER __cdecl parse_infoheader(_In_ const uint8_t* const imstream, _In_ const unsigned size) {
     assert(size >= (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)));
     BITMAPINFOHEADER header = { 0 };
 
@@ -64,12 +64,12 @@ static inline BITMAPINFOHEADER __stdcall parse_infoheader(_In_ const uint8_t* co
     return header;
 }
 
-static inline BITMAP_PIXEL_ORDERING get_pixel_order(_In_ const BITMAPINFOHEADER* const restrict header) {
+static inline BITMAP_PIXEL_ORDERING __cdecl get_pixel_order(_In_ const BITMAPINFOHEADER* const restrict header) {
     return (header->biHeight >= 0) ? BOTTOMUP : TOPDOWN;
 }
 
 // reads in a bmp file from disk and deserializes it into a bitmap_t struct
-static inline bitmap_t bitmap_read(_In_ const wchar_t* const restrict filepath) {
+static inline bitmap_t __cdecl bitmap_read(_In_ const wchar_t* const restrict filepath) {
     unsigned size               = 0;
     bitmap_t image              = { 0 }; // will be used as an empty placeholder for premature returns until members are properly assigned
 
@@ -92,13 +92,13 @@ static inline bitmap_t bitmap_read(_In_ const wchar_t* const restrict filepath) 
 }
 
 // use this to cleanup a bitmap_t after its use
-static inline void bitmap_close(_In_ bitmap_t* const restrict image) {
+static inline void __cdecl bitmap_close(_In_ bitmap_t* const restrict image) {
     free(image->_buffer);
     memset(image, 0u, sizeof(bitmap_t));
 }
 
 // prints out information about the passed BMP file
-static inline void bitmap_info(_In_ const bitmap_t* const restrict image) {
+static inline void __cdecl bitmap_info(_In_ const bitmap_t* const restrict image) {
     wprintf_s(
         L"|---------------------------------------------------------------------------|\n"
         L" %s bitmap image (%3.4Lf MiBs)\n"

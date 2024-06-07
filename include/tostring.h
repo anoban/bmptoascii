@@ -1,8 +1,8 @@
 #include <bitmap.h>
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// USE <tostring.h> AS THE MASTER INCLUDE IN C SOURCES SINCE IT INCLUDES <bitmap.h>, WHICH INCLUDES <utilities.h> //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// USE <tostring.h> AS THE MASTER INCLUDE IN C SOURCES SINCE IT TRANSITIVELY INCLUDES <bitmap.h> AND <utilities.h> //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define CONSOLE_WIDTH              140LLU
 
@@ -139,7 +139,7 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
     return buffer;
 }
 
-// a context aware dispatcher for to_raw_string and to_downscaled_string
+// an image width predicated dispatcher for to_raw_string and to_downscaled_string
 static inline wchar_t* __cdecl to_string(_In_ const bitmap_t* const restrict image) {
     if (image->_infoheader.biWidth <= CONSOLE_WIDTH) return to_raw_string(image);
     return to_downscaled_string(image);

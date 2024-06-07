@@ -31,7 +31,7 @@
 // } RGBQUAD;
 // we cannot make templates work with both RGBTRIPLE & RGBQUAD because they have different member names!
 
-static inline uint8_t* open(_In_ const wchar_t* const restrict filename, _Inout_ unsigned* const restrict rbytes) {
+static inline uint8_t* __cdecl open(_In_ const wchar_t* const restrict filename, _Inout_ unsigned* const restrict rbytes) {
     LARGE_INTEGER liFsize = { .QuadPart = 0LLU };
     uint8_t*      buffer  = NULL;
 
@@ -96,7 +96,7 @@ static inline unsigned __stdcall weighted_average(_In_ const RGBQUAD* const rest
 }
 
 // average of minimum and maximum RGB values in a pixel
-static inline unsigned minmax_average(_In_ const RGBQUAD* const restrict _pixel) {
+static inline unsigned __stdcall minmax_average(_In_ const RGBQUAD* const restrict _pixel) {
     // we don't want overflows or truncations here
     return (((double) (min(min(_pixel->rgbBlue, _pixel->rgbGreen), _pixel->rgbRed))) +
             (max(max(_pixel->rgbBlue, _pixel->rgbGreen), _pixel->rgbRed))) /
@@ -104,7 +104,7 @@ static inline unsigned minmax_average(_In_ const RGBQUAD* const restrict _pixel)
 }
 
 // luminosity of an RGB pixel
-static inline unsigned luminosity(_In_ const RGBQUAD* const restrict _pixel) {
+static inline unsigned __stdcall luminosity(_In_ const RGBQUAD* const restrict _pixel) {
     return _pixel->rgbBlue * 0.2126 + _pixel->rgbGreen * 0.7152 + _pixel->rgbRed * 0.0722;
 }
 

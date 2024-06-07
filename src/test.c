@@ -27,11 +27,11 @@ static const unsigned char const dummybmp[] = {
 };
 
 int wmain(void) {
-    #pragma region __TEST_BMP_STARTTAG__
-    assert(start_tag_be == 0x424D);
-    assert(start_tag_le == 0x4D42);
-    assert(*(unsigned short*) (dummybmp) == start_tag_le);
-    #pragma endregion __TEST_BMP_STARTTAG__
+    #pragma region __TEST_BMP_STARTTAGS__
+    assert(START_TAG_BE == 0x424D);
+    assert(START_TAG_LE == 0x4D42);
+    assert(*(unsigned short*) (dummybmp) == START_TAG_LE);
+    #pragma endregion __TEST_BMP_STARTTAGS__
 
     #pragma region __TEST_TRANSFORMERS__
     assert(arithmetic_average(&min) == 0);
@@ -68,7 +68,7 @@ int wmain(void) {
     }
     #pragma endregion __TEST_TRANSFORMERS__
 
-    #pragma region __TEST_RGBMAPPER__
+    #pragma region __TEST_RGBMAPPERS__
     RGBQUAD        temp = { 0 };
 
     for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
@@ -120,11 +120,11 @@ int wmain(void) {
             }
         }
     }
-    #pragma endregion __TEST_RGBMAPPER__
+    #pragma endregion __TEST_RGBMAPPERS__
 
     #pragma region         __TEST_PARSERS__
     const BITMAPFILEHEADER bmpfh = parse_fileheader(dummybmp, __crt_countof(dummybmp));
-    assert(bmpfh.bfType == start_tag_le);
+    assert(bmpfh.bfType == START_TAG_LE);
     assert(bmpfh.bfSize == 1409334); // size of the image where this buffer was extracted from, in bytes
     assert(bmpfh.bfReserved1 == 0);
     assert(bmpfh.bfReserved2 == 0);
