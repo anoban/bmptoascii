@@ -62,7 +62,7 @@ static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict
     return buffer;
 }
 
-// generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width (~140 chars),
+// generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width (~142 chars),
 // downscaling is completely predicated only on the image width, and the proportionate scaling factor will be used to scale down the image vertically too.
 // downscaling needs to be done in square pixel blocks which will be represented by a single wchar_t
 static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const restrict image) {
@@ -71,44 +71,64 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
     // each pixel block will be 2 pixels wide and 2 pixels tall (this 1:1 dimension of the block helps us preserve the shape of the original image)
     const double  npixels_per_block /* number of pixels in a block */   = block_d * block_d; // since our blocks are square
 
+    // if the image is 3720 pixels wide, 3720 / 140 = 26.5714285, hence block dim ~ 27 x 27
+    // we'll need 3720 / 27 = 137.7777 blocks
+    // first 137 blocks will represent 27 x 27 pixel blocks, and the last one will represent only a fraction of that block size
+    const int64_t block_wcount                                          = ceill(image->_infoheader.biWidth / 140.0L);
+    const int64_t block_hcount                                          = ceill(image->_infoheader.biHeight / (double) block_d);
+
+    // completely filled pixel blocks (on the horizontal axis)
+    const int64_t nfullblocks_w                                         = image->_infoheader.biWidth / 140; // deliberate integer division
+    // number of pixels in the last partially filled block (on the horizontal axis)
+    const int64_t residual_pixels_w                                     = image->_infoheader.biWidth - (block_d * nfullblocks_w);
+
+    // completely filled pixel blocks (on the vertical axis)
+    const int64_t nfullblocks_h     = image->_infoheader.biHeight / block_d; // deliberate integer division
+    // number of pixels in the last partially filled block (on the vertical axis)
+    const int64_t residual_pixels_h = image->_infoheader.biHeight - (block_d * nfullblocks_h);
+
     // we have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent
     // that block as a wchar_t. one wchar_t in our buffer will have to represent (block_w x block_h) number of RGBQUADs
-    const int64_t nwchars          = 142 /* 140 wchar_ts + CRLF */ * ceill(image->_infoheader.biHeight / (long double) block_d);
+    const int64_t nwchars           = block_hcount * (block_wcount + 2); // saving two wide chars for CRLF!
 
-    wchar_t* const restrict buffer = malloc(nwchars * sizeof(wchar_t));
+    wchar_t* const restrict buffer  = malloc(nwchars * sizeof(wchar_t));
     if (!buffer) {
         fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
-        return buffer;
+        return NULL;
     }
 
     double  blockavg_blue = 0.0, blockavg_green = 0.0, blockavg_red = 0.0; // per block averages of the rgbBlue, rgbGreen and rgbRed values
     int64_t caret = 0, offset = 0;
 
-    if (image->_infoheader.biHeight < 0) { // if the image pixels are ordered topdown;
-        for (int64_t nrows = 0; nrows < image->_infoheader.biHeight; nrows += block_d) {
-            for (int64_t ncols = 0; ncols < image->_infoheader.biWidth; ncols += block_d) {
-                // the outer two nested for loops work to delimit the block the two inner nested loops operate on
-                for (int64_t bh = nrows; bh < (nrows + block_d); ++bh) {
-                    for (int64_t bw = ncols; bw < (ncols + block_d); ++bw) {
-                        offset          = (bh * image->_infoheader.biWidth) + bw;
+    if (image->_infoheader.biHeight < 0) {
+        // if the image pixels are ordered topdown;
+        int64_t row = 0, col = 0;
+        // process the full blocks first
+        for (; row < nfullblocks_h * block_d; row += block_d) {
+            for (; col < nfullblocks_w * block_d; col += block_d) {
+                // the outer two nested for loops will work to delimit the block the two inner nested for loops will operate on
+                for (int64_t r = row; r < (row + block_d); ++r) {
+                    for (int64_t c = col; c < (col + block_d); ++c) {
+                        offset          = (r * image->_infoheader.biWidth) + c;
                         blockavg_blue  += image->_pixels[offset].rgbBlue;
                         blockavg_green += image->_pixels[offset].rgbGreen;
                         blockavg_red   += image->_pixels[offset].rgbRed;
                     }
                 }
 
-                blockavg_blue   /= npixels_per_block;
-                blockavg_green  /= npixels_per_block;
-                blockavg_red    /= npixels_per_block;
-
-                buffer[caret++]  = blockmap(blockavg_blue, blockavg_green, blockavg_red);
+                blockavg_blue  /= npixels_per_block;
+                blockavg_green /= npixels_per_block;
+                blockavg_red   /= npixels_per_block;
+                assert(blockavg_blue <= 255.00 && blockavg_green <= 255.00 && blockavg_red <= 255.00);
+                buffer[caret++] = blockmap(blockavg_blue, blockavg_green, blockavg_red);
                 blockavg_blue = blockavg_green = blockavg_red = 0.000; // reset the block averages
             }
-
+            //
             buffer[caret++] = L'\n';
             buffer[caret++] = L'\r';
         }
-    } else { // if the image pixels are ordered bottomup
+    } else {
+        // if the image pixels are ordered bottom up
         for (int64_t nrows = image->_infoheader.biHeight - 1LLU; nrows >= 0; nrows -= block_d) {
             // start traversal at the bottom most scan line
             for (int64_t ncols = 0; ncols < image->_infoheader.biWidth; ncols += block_d) { // traverse left to right in scan lines
@@ -123,10 +143,11 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
                     }
                 }
 
-                blockavg_blue   /= npixels_per_block;
-                blockavg_green  /= npixels_per_block;
-                blockavg_red    /= npixels_per_block;
-                buffer[caret++]  = blockmap(blockavg_blue, blockavg_green, blockavg_red);
+                blockavg_blue  /= npixels_per_block;
+                blockavg_green /= npixels_per_block;
+                blockavg_red   /= npixels_per_block;
+                assert(blockavg_blue <= 255.00 && blockavg_green <= 255.00 && blockavg_red <= 255.00);
+                buffer[caret++] = blockmap(blockavg_blue, blockavg_green, blockavg_red);
                 blockavg_blue = blockavg_green = blockavg_red = 0.000;
             }
 

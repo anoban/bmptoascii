@@ -85,18 +85,18 @@ static const wchar_t palette_extended[] = { L' ',  L'.', L'\'', L'`', L'^', L'"'
 #ifdef __WANT_PRIMITIVE_TRANSFORMERS__
 
 // arithmetic average of an RGB pixel values
-static inline unsigned __stdcall arithmetic_average(_In_ const RGBQUAD* const restrict _pixel) {
+static inline unsigned __stdcall arithmetic_average(_In_ const register RGBQUAD* const restrict _pixel) {
     // we don't want overflows or truncations here
     return (((double) (_pixel->rgbBlue)) + _pixel->rgbGreen + _pixel->rgbRed) / 3.000;
 }
 
 // weighted average of an RGB pixel values
-static inline unsigned __stdcall weighted_average(_In_ const RGBQUAD* const restrict _pixel) {
+static inline unsigned __stdcall weighted_average(_In_ const register RGBQUAD* const restrict _pixel) {
     return _pixel->rgbBlue * 0.299 + _pixel->rgbGreen * 0.587 + _pixel->rgbRed * 0.114;
 }
 
 // average of minimum and maximum RGB values in a pixel
-static inline unsigned __stdcall minmax_average(_In_ const RGBQUAD* const restrict _pixel) {
+static inline unsigned __stdcall minmax_average(_In_ const register RGBQUAD* const restrict _pixel) {
     // we don't want overflows or truncations here
     return (((double) (min(min(_pixel->rgbBlue, _pixel->rgbGreen), _pixel->rgbRed))) +
             (max(max(_pixel->rgbBlue, _pixel->rgbGreen), _pixel->rgbRed))) /
@@ -104,7 +104,7 @@ static inline unsigned __stdcall minmax_average(_In_ const RGBQUAD* const restri
 }
 
 // luminosity of an RGB pixel
-static inline unsigned __stdcall luminosity(_In_ const RGBQUAD* const restrict _pixel) {
+static inline unsigned __stdcall luminosity(_In_ const register RGBQUAD* const restrict _pixel) {
     return _pixel->rgbBlue * 0.2126 + _pixel->rgbGreen * 0.7152 + _pixel->rgbRed * 0.0722;
 }
 
@@ -131,10 +131,12 @@ static inline unsigned __stdcall luminosity(_In_ const RGBQUAD* const restrict _
 // a handrolled inline function will be the best choice!
 
 // taking it for granted that the input will never be a negative value,
-static inline unsigned __stdcall nudge(_In_ const float _value) { return _value < 1.000000 ? 1 : _value; }
+static inline unsigned __stdcall nudge(_In_ const register float _value) { return _value < 1.000000 ? 1 : _value; }
 
 static inline wchar_t __stdcall arithmetic_mapper(
-    _In_ const RGBQUAD* const restrict _pixel, _In_ const wchar_t* const restrict _palette, _In_ const unsigned _palette_len
+    _In_ const register RGBQUAD* const restrict _pixel,
+    _In_ const register wchar_t* const restrict _palette,
+    _In_ const register unsigned _palette_len
 ) {
     const unsigned _result = (((double) (_pixel->rgbBlue)) + _pixel->rgbGreen + _pixel->rgbRed) / 3.000; // can range from 0 to 255
     // hence, _result / (float)(UCHAR_MAX) can range from 0.0 to 1.0
@@ -142,14 +144,18 @@ static inline wchar_t __stdcall arithmetic_mapper(
 }
 
 static inline wchar_t __stdcall weighted_mapper(
-    _In_ const RGBQUAD* const restrict _pixel, _In_ const wchar_t* const restrict _palette, _In_ const unsigned _palette_len
+    _In_ const register RGBQUAD* const restrict _pixel,
+    _In_ const register wchar_t* const restrict _palette,
+    _In_ const register unsigned _palette_len
 ) {
     const unsigned _result = _pixel->rgbBlue * 0.299 + _pixel->rgbGreen * 0.587 + _pixel->rgbRed * 0.114;
     return _palette[_result ? nudge(_result / (float) (UCHAR_MAX) *_palette_len) - 1 : 0];
 }
 
 static inline wchar_t __stdcall minmax_mapper(
-    _In_ const RGBQUAD* const restrict _pixel, _In_ const wchar_t* const restrict _palette, _In_ const unsigned _palette_len
+    _In_ const register RGBQUAD* const restrict _pixel,
+    _In_ const register wchar_t* const restrict _palette,
+    _In_ const register unsigned _palette_len
 ) {
     const unsigned _result = (((double) (min(min(_pixel->rgbBlue, _pixel->rgbGreen), _pixel->rgbRed))) +
                               (max(max(_pixel->rgbBlue, _pixel->rgbGreen), _pixel->rgbRed))) /
@@ -158,7 +164,9 @@ static inline wchar_t __stdcall minmax_mapper(
 }
 
 static inline wchar_t __stdcall luminosity_mapper(
-    _In_ const RGBQUAD* const restrict _pixel, _In_ const wchar_t* const restrict _palette, _In_ const unsigned _palette_len
+    _In_ const register RGBQUAD* const restrict _pixel,
+    _In_ const register wchar_t* const restrict _palette,
+    _In_ const register unsigned _palette_len
 ) {
     const unsigned _result = _pixel->rgbBlue * 0.2126 + _pixel->rgbGreen * 0.7152 + _pixel->rgbRed * 0.0722;
     return _palette[_result ? nudge(_result / (float) (UCHAR_MAX) *_palette_len) - 1 : 0];
