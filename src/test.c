@@ -69,7 +69,7 @@ int wmain(void) {
     #pragma endregion __TEST_TRANSFORMERS__
 
     #pragma region __TEST_RGBMAPPERS__
-    RGBQUAD        temp = { 0 };
+    RGBQUAD temp = { 0 };
 
     for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
         for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
@@ -122,7 +122,7 @@ int wmain(void) {
     }
     #pragma endregion __TEST_RGBMAPPERS__
 
-    #pragma region         __TEST_PARSERS__
+    #pragma region __TEST_PARSERS__
     const BITMAPFILEHEADER bmpfh = parse_fileheader(dummybmp, __crt_countof(dummybmp));
     assert(bmpfh.bfType == START_TAG_LE);
     assert(bmpfh.bfSize == 1409334); // size of the image where this buffer was extracted from, in bytes
@@ -147,7 +147,7 @@ int wmain(void) {
     assert(order == BOTTOMUP);
     #pragma endregion __TEST_PARSERS__
 
-    #pragma region              __TEST_FULL__
+    #pragma region __TEST_FULL__
     static const wchar_t* const filenames[] = { L"./test/vendetta.bmp",  L"./test/child.bmp", L"./test/girl.bmp",
                                                 L"./test/bobmarley.bmp", L"./test/cubes.bmp", NULL };
     // all of these test images will cause to_string to reroute to to_raw_string
