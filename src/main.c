@@ -3,38 +3,36 @@
     #include <tostring.h>
 
 int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
+    #ifdef _DEBUG
+
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
-    bitmap_t vendetta                          = bitmap_read(L"./vendetta.bmp");
-    const wchar_t* const restrict vendettawstr = to_string(&vendetta);
-    _putws(vendettawstr);
-    _putws(L"\n\n");
+    bitmap_t image                          = bitmap_read(L"./vendetta.bmp");
+    const wchar_t* const restrict bitmapstr = to_string(&image);
+    _putws(bitmapstr);
+    _putws(L"\n");
 
-    bitmap_t child                          = bitmap_read(L"./child.bmp");
-    const wchar_t* const restrict childwstr = to_string(&child);
-    _putws(childwstr);
-    _putws(L"\n\n");
+    free(bitmapstr);
+    bitmap_close(&image);
 
-    bitmap_t girl                          = bitmap_read(L"./girl.bmp");
-    const wchar_t* const restrict girlwstr = to_string(&girl);
-    _putws(girlwstr);
-    _putws(L"\n\n");
+    #else
 
-    bitmap_t bobmarley                          = bitmap_read(L"./bobmarley.bmp");
-    const wchar_t* const restrict bobmarleywstr = to_string(&bobmarley);
-    _putws(bobmarleywstr);
-    _putws(L"\n\n");
+    if (argc == 1) {
+        _putws(L"");
+        return EXIT_FAILURE;
+    }
 
-    free(vendettawstr);
-    free(childwstr);
-    free(girlwstr);
-    free(bobmarleywstr);
+    for (unsigned i = 1; i < argc; ++i) {
+        bitmap_t image                     = bitmap_read(argv[i]);
+        const wchar_t* const restrict wstr = to_string(&image);
+        _putws(wstr);
+        _putws(L"\n\n");
+        free(wstr);
+        bitmap_close(&image);
+    }
 
-    bitmap_close(&vendetta);
-    bitmap_close(&child);
-    bitmap_close(&girl);
-    bitmap_close(&bobmarley);
+    #endif
 
     return EXIT_SUCCESS;
 }

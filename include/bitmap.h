@@ -96,35 +96,3 @@ static inline void __cdecl bitmap_close(_In_ bitmap_t* const restrict image) {
     free(image->_buffer);
     memset(image, 0u, sizeof(bitmap_t));
 }
-
-// prints out information about the passed BMP file
-static inline void __cdecl bitmap_info(_In_ const bitmap_t* const restrict image) {
-    wprintf_s(
-        L"|---------------------------------------------------------------------------|\n"
-        L" %s bitmap image (%3.4Lf MiBs)\n"
-        L" Pixel ordering: %10s\n"
-        L" Width: %5lu pixels, Height: %5lu pixels\n"
-        L" Bit depth: %3u\n"
-        L" Resolution (PPM): X {%5ld} Y {%5ld}\n"
-        L"|---------------------------------------------------------------------------|\n",
-        image->_infoheader.biSizeImage ? L"Compressed" : L"Uncompressed",
-        image->_fileheader.bfSize / (1024.0L * 1024.0L),
-        get_pixel_order(&image->_infoheader) == BOTTOMUP ? L"bottom-up" : L"top-down",
-        image->_infoheader.biWidth,
-        image->_infoheader.biHeight,
-        image->_infoheader.biBitCount,
-        image->_infoheader.biXPelsPerMeter,
-        image->_infoheader.biYPelsPerMeter
-    );
-
-    if (image->_infoheader.biSizeImage) { // don't bother if the image isn't compressed
-        switch (image->_infoheader.biCompression) {
-            case RGB       : _putws(L"RGB"); break;
-            case RLE4      : _putws(L"RLE4"); break;
-            case RLE8      : _putws(L"RLE8"); break;
-            case BITFIELDS : _putws(L"BITFIELDS"); break;
-            case UNKNOWN   : _putws(L"UNKNOWN"); break;
-            default        : break;
-        }
-    }
-}
