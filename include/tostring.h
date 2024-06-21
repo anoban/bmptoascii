@@ -1,23 +1,27 @@
 #include <bitmap.h>
 
-#define CONSOLE_WIDTH              140LLU
+#define CONSOLE_WIDTH              140LL
 #define CONSOLE_WIDTHR             140.0L
 
 // selected palette for RGB to wchar_t mapping
-#define spalette                   palette
+#define spalette                   palette_extended
 
 // transformer to be used for raw string mapping
-#define map(_pixel)                arithmetic_mapper(_pixel, spalette, __crt_countof(spalette))
+#define map(_pixel)                weighted_mapper(_pixel, spalette, __crt_countof(spalette))
 
 // transformer to be used with block based downscaled string mapping
 #define blockmap(blue, green, red) weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette))
 
 static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict image) {
+    if (image->_infoheader.biHeight < 0) {
+        fputws(L"Error in to_raw_string, this tool does not support bitmaps with top-down pixel ordering!\n", stderr);
+        return NULL;
+    }
+
     const int64_t npixels = (int64_t) image->_infoheader.biHeight * image->_infoheader.biWidth; // total pixels in the image
     const int64_t nwchars /* 1 wchar_t for each pixel + 2 additional wchar_ts for CRLF at the end of each scanline */ =
-        npixels + 2LLU * image->_infoheader.biHeight + 1;
+        npixels + 2LLU * image->_infoheader.biHeight;
     // space for two extra wchar_ts (L'\r', L'\n') to be appended to the end of each line
-    // + 1 for the NULL terminator
 
     wchar_t* const restrict buffer = malloc(nwchars * sizeof(wchar_t));
     if (!buffer) {
@@ -55,6 +59,11 @@ static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict
 // downscaling is completely predicated only on the image width, and the proportionate scaling factor will be used to scale down the image vertically too.
 // downscaling needs to be done in square pixel blocks which will be represented by a single wchar_t
 static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const restrict image) {
+    if (image->_infoheader.biHeight < 0) {
+        fputws(L"Error in to_raw_string, this tool does not support bitmaps with top-down pixel ordering!\n", stderr);
+        return NULL;
+    }
+
     const int64_t block_d /* dimension of an individual square block */ = ceill(image->_infoheader.biWidth / CONSOLE_WIDTHR);
 
     const double blocksize /* number of pixels in a block */            = block_d * block_d; // since our blocks are square
@@ -88,10 +97,15 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
     // true if the image height is not divisible by block_d without remainders
     // NOLINTEND(readability-isolate-declaration)
 
+    uint64_t full = 0, incomplete = 0, count = 0;
+
     // row = image->_infoheader.biHeight will get us to the last pixel of the first (last in the buffer) scanline with (r * image->_infoheader.biWidth)
     // hence, row = image->_infoheader.biHeight - 1 so we can traverse the first scanline with (r * image->_infoheader.biWidth) + c
     for (row = image->_infoheader.biHeight - 1; row >= block_d; row -= block_d) { // start the traversal at the bottom most scan line
-        for (col = 0; col < image->_infoheader.biWidth; col += block_d) {         // traverse left to right in scan lines
+        wprintf_s(L"row = %lld\n", row);
+        for (col = 0; col <= image->_infoheader.biWidth - block_d; col += block_d) { // traverse left to right in scan lines
+
+            // wprintf_s(L"row = %lld, col = %lld\n", row, col);
 
             for (int64_t r = row; r > row - block_d; --r) { // deal with blocks
                 for (int64_t c = col; c < col + block_d; ++c) {
@@ -99,8 +113,14 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
                     blockavg_blue  += image->_pixels[offset].rgbBlue;
                     blockavg_green += image->_pixels[offset].rgbGreen;
                     blockavg_red   += image->_pixels[offset].rgbRed;
+
+                    count++;
                 }
             }
+
+            full++;
+            assert(count == block_d * block_d);
+            count           = 0;
 
             blockavg_blue  /= blocksize;
             blockavg_green /= blocksize;
@@ -112,18 +132,25 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
             blockavg_blue = blockavg_green = blockavg_red = 0.000;
         }
 
+        wprintf_s(L"col = %lld\n", col);
+
         if (block_rows_end_with_incomplete_blocks) { // if there are partially filled blocks at the end of this row of blocks,
 
             for (int64_t r = row; r > row - block_d; --r) {
-                for (int64_t c = col - block_d; // shift the column delimiter backward by one block, to the end of the last complete block
-                     c < image->_infoheader.biWidth;
-                     ++c) { // start from the end of the last complete block
+                // shift the column delimiter backward by one block, to the end of the last complete block
+                for (int64_t c = col; c < image->_infoheader.biWidth; ++c) { // start from the end of the last complete block
                     offset          = (r * image->_infoheader.biWidth) + c;
                     blockavg_blue  += image->_pixels[offset].rgbBlue;
                     blockavg_green += image->_pixels[offset].rgbGreen;
                     blockavg_red   += image->_pixels[offset].rgbRed;
+
+                    count++;
                 }
             }
+
+            incomplete++;
+            assert(count == pblocksize); // fails
+            count           = 0;
 
             blockavg_blue  /= pblocksize;
             blockavg_green /= pblocksize;
@@ -139,17 +166,20 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
         buffer[caret++] = L'\r';
     }
 
+    wprintf_s(L"full = %llu\n", full);
+    wprintf_s(L"incomplete = %llu\n", incomplete);
+    wprintf_s(L"row = %lld\n", row);
     assert(row < block_d);
 
     pblocksize = // change the block size to represent the number of pixels held by the last row blocks
         (image->_infoheader.biHeight - (image->_infoheader.biHeight / block_d /* deliberate integer division */) * block_d) * block_d;
 
-    wprintf_s(L"nwchars - caret :: %lld, block_d = %lld, pblock size = %lld\n", nwchars - caret, block_d, pblocksize);
+    if (block_columns_end_with_incomplete_blocks) { // process the last incomplete row of pixel blocks here,
 
-    if (block_columns_end_with_incomplete_blocks) {                       // process the last incomplete row of pixel blocks here,
         for (col = 0; col < image->_infoheader.biWidth; col += block_d) { // col must be 0 at the start of this loop
-            for (int64_t r = row; r >= 0; --r) {                          // r delimits the start row of the block being defined
-                for (int64_t c = col; c < col + block_d; ++c) {           // c delimits the start column of the block being defined
+            incomplete = 0;
+            for (int64_t r = row; r >= 0; --r) {                // r delimits the start row of the block being defined
+                for (int64_t c = col; c < col + block_d; ++c) { // c delimits the start column of the block being defined
                     offset          = (r * image->_infoheader.biWidth) + c;
                     blockavg_blue  += image->_pixels[offset].rgbBlue;
                     blockavg_green += image->_pixels[offset].rgbGreen;
@@ -169,9 +199,9 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
         buffer[caret++] = L'\r';
     }
 
-    buffer[caret] = 0; // using the last byte as null terminator
+    //  buffer[caret] = 0; // using the last byte as null terminator
     wprintf_s(L"caret :: %lld, nwchars :: %lld\n", caret, nwchars);
-    // assert(caret == nwchars);
+    assert(caret == nwchars);
     return buffer;
 }
 

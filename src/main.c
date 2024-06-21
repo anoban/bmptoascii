@@ -8,7 +8,7 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
-    bitmap_t image                          = bitmap_read(L"./vendetta.bmp");
+    bitmap_t image                          = bitmap_read(L"./garfield.bmp");
     const wchar_t* const restrict bitmapstr = to_string(&image);
     _putws(bitmapstr);
     _putws(L"\n");

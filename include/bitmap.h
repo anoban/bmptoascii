@@ -29,7 +29,7 @@ static BITMAPFILEHEADER __cdecl parse_fileheader(_In_ const uint8_t* const restr
     BITMAPFILEHEADER header = { .bfType = 0, .bfSize = 0, .bfReserved1 = 0, .bfReserved2 = 0, .bfOffBits = 0 };
 
     if (*((uint16_t*) (imstream)) != START_TAG_LE) {
-        fputws(L"Error in parsefileheader, file appears not to be a Windows BMP file\n", stderr);
+        fputws(L"Error in parse_fileheader, file appears not to be a Windows BMP file\n", stderr);
         free(imstream);
         return header;
     }
@@ -44,7 +44,7 @@ static inline BITMAPINFOHEADER __cdecl parse_infoheader(_In_ const uint8_t* cons
     BITMAPINFOHEADER header = { 0 };
 
     if (*((uint32_t*) (imstream + 14U)) > 40U) {
-        fputws(L"Error in parseinfoheader, BMP image seems to contain an unparsable file info header", stderr);
+        fputws(L"Error in parse_infoheader, BMP image seems to contain an unparsable file info header", stderr);
         free(imstream);
         return header;
     }
