@@ -320,6 +320,9 @@
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\test.c" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
