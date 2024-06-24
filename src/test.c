@@ -170,6 +170,11 @@ int wmain(void) {
     while (*_ptr) {
         bitmap_t image                     = bitmap_read(*_ptr);
         const wchar_t* const restrict wstr = to_string(&image);
+        if (!wstr) {
+            wprintf_s(L"Error :: cannot process %s!\n", *_ptr);
+            continue;
+        }
+
         _putws(wstr);
         _putws(L"\n\n");
 

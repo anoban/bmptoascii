@@ -1,16 +1,17 @@
 #include <bitmap.h>
 
-#define CONSOLE_WIDTH              140LL
-#define CONSOLE_WIDTHR             140.0
+#define CONSOLE_WIDTH  140LL
+#define CONSOLE_WIDTHR 140.0
 
-// selected palette for RGB to wchar_t mapping
-#define spalette                   palette_extended
-
-// transformer to be used for raw string mapping
-#define map(_pixel)                weighted_mapper(_pixel, spalette, __crt_countof(spalette))
-
-// transformer to be used with block based downscaled string mapping
-#define blockmap(blue, green, red) weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette))
+////////////////////////////////////
+//    PLACE FOR CUSTOMIZATIONS    //
+////////////////////////////////////
+#define spalette       palette_extended                                           // PICK ONE OF THE THREE AVALIABLE PALETTES
+#define map(_pixel)    weighted_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
+#define blockmap(blue, green, red)                                                                                                         \
+    weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette)) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
+// IT IS NOT OBLIGATORY FOR BOTH THE BASIC MAPPER AND THE BLOCK MAPPER TO USE THE SAME PALETTE
+// IF NEED BE, THE PALETTE EXPANDED FROM spalette COULD BE REPLACED BY A REAL PALETTE NAME
 
 static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict image) {
     if (image->_infoheader.biHeight < 0) {
