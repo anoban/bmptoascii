@@ -1,7 +1,7 @@
 #include <bitmap.h>
 
 #define CONSOLE_WIDTH              140LL
-#define CONSOLE_WIDTHR             140.0L
+#define CONSOLE_WIDTHR             140.0
 
 // selected palette for RGB to wchar_t mapping
 #define spalette                   palette_extended
@@ -23,7 +23,7 @@ static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict
         npixels + 2LLU * image->_infoheader.biHeight;
     // space for two extra wchar_ts (L'\r', L'\n') to be appended to the end of each line
 
-    wchar_t* const restrict buffer = malloc(nwchars * sizeof(wchar_t));
+    wchar_t* const restrict buffer = malloc((nwchars + 1) * sizeof(wchar_t)); // and the +1 is for the NULL terminator
     if (!buffer) {
         fwprintf_s(stderr, L"Error in %s @ line %d: malloc failed!\n", __FUNCTIONW__, __LINE__);
         return NULL;
@@ -51,7 +51,7 @@ static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict
 
     buffer[caret] = 0; // null termination of the string
 
-    assert(caret + 1 == nwchars);
+    assert(caret == nwchars);
     return buffer;
 }
 
@@ -66,8 +66,8 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
 
     const int64_t block_d /* dimension of an individual square block */ = ceill(image->_infoheader.biWidth / CONSOLE_WIDTHR);
 
-    const double blocksize /* number of pixels in a block */            = block_d * block_d; // since our blocks are square
-    int64_t      pblocksize = // number of pixels in each block in the rightmost column of incomplete blocks.
+    const float blocksize /* number of pixels in a block */             = block_d * block_d; // since our blocks are square
+    int64_t     pblocksize = // number of pixels in each block in the rightmost column of incomplete blocks.
         // width of the image - (number of complete blocks * block dimension) will give the residual pixels along the horizontal axis
         // multiply that by block domension again, and we'll get the number of pixels in the incomplete block
         (image->_infoheader.biWidth -
@@ -75,8 +75,8 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
         block_d;
     assert(pblocksize < blocksize);
 
-    const int64_t nblocks_w        = ceill(image->_infoheader.biWidth / (double) block_d);
-    const int64_t nblocks_h        = ceill(image->_infoheader.biHeight / (double) block_d);
+    const int64_t nblocks_w        = ceill(image->_infoheader.biWidth / (float) block_d);
+    const int64_t nblocks_h        = ceill(image->_infoheader.biHeight / (float) block_d);
 
     // we have to compute the average R, G & B values for all pixels inside each pixel blocks and use the average to represent
     // that block as a wchar_t. one wchar_t in our buffer will have to represent (block_w x block_h) number of RGBQUADs
@@ -89,7 +89,7 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
     }
 
     // NOLINTBEGIN(readability-isolate-declaration)
-    double  blockavg_blue = 0.0, blockavg_green = 0.0, blockavg_red = 0.0; // per block averages of the rgbBlue, rgbGreen and rgbRed values
+    float   blockavg_blue = 0.0, blockavg_green = 0.0, blockavg_red = 0.0; // per block averages of the rgbBlue, rgbGreen and rgbRed values
     int64_t caret = 0, offset = 0, col = 0, row = 0;
     const bool block_rows_end_with_incomplete_blocks    = (image->_infoheader.biWidth % CONSOLE_WIDTH);
     // true if the image width is not divisible by 140 without remainders

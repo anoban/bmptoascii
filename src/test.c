@@ -2,7 +2,7 @@
 
 #ifdef __TEST_BMPT_ASCII__
     #define __WANT_PRIMITIVE_TRANSFORMERS__
-
+    #include <time.h>
     #include <tostring.h>
 
 static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "BITMAPINFOHEADER is expected to be 40 bytes in size, but is not so!");
@@ -26,12 +26,16 @@ static const unsigned char const dummybmp[] = {
     19, 255, 8,  8,   20, 255, 8,   8,  20, 255, 8,   8
 };
 
+static const float RNDMAX = RAND_MAX + 2; // the +2 is just for extra safety that we do not get too close to 1.000
+
 int wmain(void) {
+    srand(time(NULL));
+
     #pragma region __TEST_BMP_STARTTAGS__
     assert(START_TAG_BE == 0x424D);
     assert(START_TAG_LE == 0x4D42);
     assert(*(unsigned short*) (dummybmp) == START_TAG_LE);
-    #pragma endregion __TEST_BMP_STARTTAGS__
+    #pragma endregion
 
     #pragma region __TEST_TRANSFORMERS__
     assert(arithmetic_average(&min) == 0);
@@ -66,10 +70,11 @@ int wmain(void) {
             }
         }
     }
-    #pragma endregion __TEST_TRANSFORMERS__
+    #pragma endregion
 
     #pragma region __TEST_RGBMAPPERS__
-    RGBQUAD temp = { 0 };
+    RGBQUAD temp    = { 0 };
+    float   bscaler = 0.000, gscaler = 0.000, rscaler = 0.000;
 
     for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
         for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
@@ -77,6 +82,11 @@ int wmain(void) {
                 temp.rgbBlue  = blue;
                 temp.rgbGreen = green;
                 temp.rgbRed   = red;
+
+                bscaler       = rand() / RNDMAX; // a float in the range of 0.0 and 1.0
+                gscaler       = (ONE - bscaler) * (rand() / RNDMAX);
+                rscaler       = ONE - (bscaler + gscaler);
+                // if ((bscaler + gscaler + rscaler) > ONE) wprintf_s(L"%.10lf\n", bscaler + gscaler + rscaler);
 
                 // make sure none of the below raise an access violation exception!
                 arithmetic_mapper(&temp, palette, __crt_countof(palette));
@@ -94,14 +104,12 @@ int wmain(void) {
                 luminosity_mapper(&temp, palette, __crt_countof(palette));
                 luminosity_mapper(&temp, palette_minimal, __crt_countof(palette_minimal));
                 luminosity_mapper(&temp, palette_extended, __crt_countof(palette_extended));
-            }
-        }
-    }
 
-    for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
-        for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
-            for (unsigned red = 0; red <= UCHAR_MAX; ++red) {
-                // make sure none of the below raise an access violation exception!
+                tunable_mapper(&temp, bscaler, gscaler, rscaler, palette, __crt_countof(palette));
+                tunable_mapper(&temp, bscaler, gscaler, rscaler, palette_minimal, __crt_countof(palette_minimal));
+                tunable_mapper(&temp, bscaler, gscaler, rscaler, palette_extended, __crt_countof(palette_extended));
+
+                // test the block mappers
                 arithmetic_blockmapper(blue, green, red, palette, __crt_countof(palette));
                 arithmetic_blockmapper(blue, green, red, palette_minimal, __crt_countof(palette_minimal));
                 arithmetic_blockmapper(blue, green, red, palette_extended, __crt_countof(palette_extended));
@@ -117,10 +125,15 @@ int wmain(void) {
                 luminosity_blockmapper(blue, green, red, palette, __crt_countof(palette));
                 luminosity_blockmapper(blue, green, red, palette_minimal, __crt_countof(palette_minimal));
                 luminosity_blockmapper(blue, green, red, palette_extended, __crt_countof(palette_extended));
+
+                tunable_blockmapper(blue, bscaler, green, gscaler, red, rscaler, palette, __crt_countof(palette));
+                tunable_blockmapper(blue, bscaler, green, gscaler, red, rscaler, palette_minimal, __crt_countof(palette_minimal));
+                tunable_blockmapper(blue, bscaler, green, gscaler, red, rscaler, palette_extended, __crt_countof(palette_extended));
             }
         }
     }
-    #pragma endregion __TEST_RGBMAPPERS__
+
+    #pragma endregion
 
     #pragma region __TEST_PARSERS__
     const BITMAPFILEHEADER bmpfh = parse_fileheader(dummybmp, __crt_countof(dummybmp));
@@ -145,13 +158,15 @@ int wmain(void) {
 
     const BITMAP_PIXEL_ORDERING order = get_pixel_order(&bmpinfh);
     assert(order == BOTTOMUP);
-    #pragma endregion __TEST_PARSERS__
+    #pragma endregion
 
     #pragma region __TEST_FULL__
-    static const wchar_t* const filenames[] = { L"./test/vendetta.bmp",  L"./test/child.bmp", L"./test/girl.bmp",
-                                                L"./test/bobmarley.bmp", L"./test/cubes.bmp", NULL };
+    static const wchar_t* const filenames[] = { L"./test/vendetta.bmp",  L"./test/child.bmp",    L"./test/girl.bmp",
+                                                L"./test/bobmarley.bmp", L"./test/cubes.bmp",    L"./test/football.bmp",
+                                                L"./test/time.bmp",      L"./test/jennifer.bmp", NULL };
     // all of these test images will cause to_string to reroute to to_raw_string
-    const wchar_t**             _ptr        = filenames;
+
+    const wchar_t** _ptr                    = filenames;
     while (*_ptr) {
         bitmap_t image                     = bitmap_read(*_ptr);
         const wchar_t* const restrict wstr = to_string(&image);
@@ -162,7 +177,7 @@ int wmain(void) {
         bitmap_close(&image);
         _ptr++;
     }
-    #pragma endregion __TEST_FULL__
+    #pragma endregion
 
     _putws(L"all's good :)");
     return EXIT_SUCCESS;

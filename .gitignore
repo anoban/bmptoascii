@@ -406,4 +406,7 @@ FodyWeavers.xsd
 *.bmp
 
 # consider the small bitmaps in the ./test directory
-!.test/*.bmp
+!test/*.bmp
+
+
+
