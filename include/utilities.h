@@ -86,6 +86,7 @@ static const wchar_t palette_extended[] = { L' ',  L'.', L'\'', L'`', L'^', L'"'
 #pragma endregion
 
 #ifdef __WANT_PRIMITIVE_TRANSFORMERS__
+    #pragma region __PRIMITIVE_TRANSFORMERS__
 
 // arithmetic average of an RGB pixel values
 static inline unsigned __stdcall arithmetic_average(_In_ const register RGBQUAD* const restrict pixel) {
@@ -110,7 +111,7 @@ static inline unsigned __stdcall minmax_average(_In_ const register RGBQUAD* con
 static inline unsigned __stdcall luminosity(_In_ const register RGBQUAD* const restrict pixel) {
     return pixel->rgbBlue * 0.2126 + pixel->rgbGreen * 0.7152 + pixel->rgbRed * 0.0722;
 }
-
+    #pragma endregion
 #endif // __WANT_PRIMITIVE_TRANSFORMERS__
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +136,8 @@ static inline unsigned __stdcall luminosity(_In_ const register RGBQUAD* const r
 
 // taking it for granted that the input will never be a negative value,
 static inline unsigned __stdcall nudge(_In_ const register float _value) { return _value < 1.000000 ? 1 : _value; }
+
+#pragma region __BASIC_MAPPERS__
 
 static inline wchar_t __stdcall arithmetic_mapper(
     _In_ const register RGBQUAD* const restrict pixel,
@@ -207,9 +210,9 @@ static inline wchar_t __stdcall penalizing_mapper(
     _In_ const register float penalty
 ) { }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-//  //
-///////////////////////////////////////////////////////////////////////////////////////////
+#pragma endregion
+
+#pragma region __BLOCK_MAPPERS__
 
 static inline wchar_t __stdcall arithmetic_blockmapper(
     _In_ const register float rgbBlue,
@@ -287,3 +290,5 @@ static inline wchar_t __stdcall penalizing_blockmapper(
     _In_ const unsigned       plength,
     _In_ const register float penalty
 ) { }
+
+#pragma endregion
