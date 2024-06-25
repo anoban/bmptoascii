@@ -84,8 +84,8 @@ int wmain(void) {
                 temp.rgbGreen = green;
                 temp.rgbRed   = red;
 
-                bscaler       = rand() / RNDMAX;           // [0.0, 1.0)
                 rnd           = rand() / (float) RAND_MAX; // [0.0, 1.0]
+                bscaler       = rand() / RNDMAX;           // [0.0, 1.0)
                 gscaler       = (ONE - bscaler) * (rand() / RNDMAX);
                 rscaler       = ONE - (bscaler + gscaler);
                 // if ((bscaler + gscaler + rscaler) > ONE) wprintf_s(L"%.10lf\n", bscaler + gscaler + rscaler);
@@ -192,9 +192,17 @@ int wmain(void) {
     #pragma endregion
 
     #pragma region __TEST_FULL__
-    static const wchar_t* const filenames[] = { L"./test/vendetta.bmp",  L"./test/child.bmp",    L"./test/girl.bmp",
-                                                L"./test/bobmarley.bmp", L"./test/cubes.bmp",    L"./test/football.bmp",
-                                                L"./test/time.bmp",      L"./test/jennifer.bmp", NULL };
+    static const wchar_t* const filenames[] = { L"./test/bobmarley.bmp",
+                                                L"./test/football.bmp",
+                                                L"./test/gewn.bmp",
+                                                L"./test/girl.bmp",
+                                                L"./test/jennifer.bmp",
+                                                L"./test/messi.bmp",
+                                                L"./test/supergirl.bmp",
+                                                L"./test/time.bmp",
+                                                L"./test/uefa2024.bmp",
+                                                L"./test/vendetta.bmp",
+                                                NULL };
     // all of these test images will cause to_string to reroute to to_raw_string
 
     const wchar_t** _ptr                    = filenames;

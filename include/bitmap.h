@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <utilities.h>
 
-// a struct representing a BMP image
+// a struct representing a windows bitmap
 typedef struct bitmap {
         BITMAPFILEHEADER _fileheader;
         BITMAPINFOHEADER _infoheader;

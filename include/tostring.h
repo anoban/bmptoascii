@@ -1,3 +1,5 @@
+#pragma once
+
 #include <bitmap.h>
 
 #define CONSOLE_WIDTH  140LL
