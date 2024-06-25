@@ -191,19 +191,12 @@ int wmain(void) {
     assert(order == BOTTOMUP);
     #pragma endregion
 
-    #pragma region __TEST_FULL__
-    static const wchar_t* const filenames[] = { L"./test/bobmarley.bmp",
-                                                L"./test/football.bmp",
-                                                L"./test/gewn.bmp",
-                                                L"./test/girl.bmp",
-                                                L"./test/jennifer.bmp",
-                                                L"./test/messi.bmp",
-                                                L"./test/supergirl.bmp",
-                                                L"./test/time.bmp",
-                                                L"./test/uefa2024.bmp",
-                                                L"./test/vendetta.bmp",
-                                                NULL };
+    #pragma region __TEST_ALL__
     // all of these test images will cause to_string to reroute to to_raw_string
+    static const wchar_t* const filenames[] = { L"./test/bobmarley.bmp", L"./test/football.bmp",  L"./test/garfield.bmp",
+                                                L"./test/gewn.bmp",      L"./test/girl.bmp",      L"./test/jennifer.bmp",
+                                                L"./test/messi.bmp",     L"./test/supergirl.bmp", L"./test/time.bmp",
+                                                L"./test/uefa2024.bmp",  L"./test/vendetta.bmp",  NULL };
 
     const wchar_t** _ptr                    = filenames;
     while (*_ptr) {
