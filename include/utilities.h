@@ -206,7 +206,7 @@ static inline wchar_t __stdcall tunable_mapper(
 #pragma region __PENALIZING_MAPPERS__
 // CAUTION :: THE PENALIZING GROUP OF MAPPERS CAN AFFECT THE PERFORMANCE SUBSTANTIALLY
 // will penalize the offset by the penalty term when the pixel satisfies the criteria
-// PREREQUISITES :: penalty must be a float in between (0.0, 1.0) (an exclusive range)
+// PREREQUISITES :: penalty must be a float in between [0.0, 1.0] (an inclusive range)
 // if you don't want a certain colour to be considered for penalization, specify both limits for that colour as UCHAR_MAX (or any identical values)
 static __forceinline wchar_t __stdcall penalizing_arithmeticmapper(
     _In_ const register RGBQUAD* const restrict pixel,
@@ -222,7 +222,7 @@ static __forceinline wchar_t __stdcall penalizing_arithmeticmapper(
 ) {
     // this mapper is incredibly expensive compared to the alternatives and hence using this with a 0.000 penalty will be ridiculous!
     // because you'll be paying dearly for something you do not need!
-    assert(penalty > 0.00000 && penalty < ONE);
+    assert(penalty >= 0.00000 && penalty <= ONE);
 
     const bool penalize = ((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
                           ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
@@ -246,7 +246,7 @@ static __forceinline wchar_t __stdcall penalizing_weightedmapper(
     _In_ const register unsigned plength,
     _In_ const register float    penalty
 ) {
-    assert(penalty > 0.00000 && penalty < ONE);
+    assert(penalty >= 0.00000 && penalty <= ONE);
     const bool penalize = ((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
                           ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
                           ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim));
@@ -267,7 +267,7 @@ static __forceinline wchar_t __stdcall penalizing_minmaxmapper(
     _In_ const register unsigned plength,
     _In_ const register float    penalty
 ) {
-    assert(penalty > 0.00000 && penalty < ONE);
+    assert(penalty >= 0.00000 && penalty <= ONE);
     const bool penalize = ((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
                           ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
                           ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim));
@@ -290,7 +290,7 @@ static __forceinline wchar_t __stdcall penalizing_luminositymapper(
     _In_ const register unsigned plength,
     _In_ const register float    penalty
 ) {
-    assert(penalty > 0.00000 && penalty < ONE);
+    assert(penalty >= 0.00000 && penalty <= ONE);
     const bool penalize = ((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
                           ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
                           ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim));

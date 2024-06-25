@@ -126,15 +126,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>D:\bmptoascii\include;$(IncludePath)</IncludePath>
+    <OutDir>.\bin\$(Configuration)\</OutDir>
+    <IntDir>.\bin\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
     <IncludePath>D:\bmptoascii\include;$(IncludePath)</IncludePath>
+    <OutDir>.\bin\$(Configuration)\</OutDir>
+    <IntDir>.\bin\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>D:\bmptoascii\include;$(IncludePath)</IncludePath>
+    <OutDir>.\bin\$(Configuration)\</OutDir>
+    <IntDir>.\bin\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='oneAPI|x64'">
     <IncludePath>D:\bmptoascii\include;$(IncludePath)</IncludePath>
+    <OutDir>.\bin\$(Configuration)\</OutDir>
+    <IntDir>.\bin\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

@@ -26,7 +26,8 @@ static const unsigned char const dummybmp[] = {
     19, 255, 8,  8,   20, 255, 8,   8,  20, 255, 8,   8
 };
 
-static const float RNDMAX = RAND_MAX + 2; // the +2 is just for extra safety that we do not get too close to 1.000
+static const float RNDMAX = RAND_MAX + 2.0000;
+// the +2.0000 is just for extra safety that we do not get too close to 1.000 when dividing rand() by RNDMAX
 
 int wmain(void) {
     srand(time(NULL));
@@ -74,7 +75,7 @@ int wmain(void) {
 
     #pragma region __TEST_RGBMAPPERS__
     RGBQUAD temp    = { 0 };
-    float   bscaler = 0.000, gscaler = 0.000, rscaler = 0.000;
+    float   bscaler = 0.000, gscaler = 0.000, rscaler = 0.000, rnd = 0.000;
 
     for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
         for (unsigned green = 0; green <= UCHAR_MAX; ++green) {
@@ -83,7 +84,8 @@ int wmain(void) {
                 temp.rgbGreen = green;
                 temp.rgbRed   = red;
 
-                bscaler       = rand() / RNDMAX; // a float in the range of 0.0 and 1.0
+                bscaler       = rand() / RNDMAX;           // [0.0, 1.0)
+                rnd           = rand() / (float) RAND_MAX; // [0.0, 1.0]
                 gscaler       = (ONE - bscaler) * (rand() / RNDMAX);
                 rscaler       = ONE - (bscaler + gscaler);
                 // if ((bscaler + gscaler + rscaler) > ONE) wprintf_s(L"%.10lf\n", bscaler + gscaler + rscaler);
@@ -129,6 +131,35 @@ int wmain(void) {
                 tunable_blockmapper(blue, bscaler, green, gscaler, red, rscaler, palette, __crt_countof(palette));
                 tunable_blockmapper(blue, bscaler, green, gscaler, red, rscaler, palette_minimal, __crt_countof(palette_minimal));
                 tunable_blockmapper(blue, bscaler, green, gscaler, red, rscaler, palette_extended, __crt_countof(palette_extended));
+
+                // test penalizing mappers
+                penalizing_arithmeticmapper(&temp, blue, green, green, red, red, blue, palette, __crt_countof(palette), rnd);
+                penalizing_arithmeticmapper(
+                    &temp, blue, green, green, red, red, blue, palette_minimal, __crt_countof(palette_minimal), rnd
+                );
+                penalizing_arithmeticmapper(
+                    &temp, blue, green, green, red, red, blue, palette_extended, __crt_countof(palette_extended), rnd
+                );
+
+                penalizing_weightedmapper(&temp, blue, green, green, red, red, blue, palette, __crt_countof(palette), rnd);
+                penalizing_weightedmapper(&temp, blue, green, green, red, red, blue, palette_minimal, __crt_countof(palette_minimal), rnd);
+                penalizing_weightedmapper(
+                    &temp, blue, green, green, red, red, blue, palette_extended, __crt_countof(palette_extended), rnd
+                );
+
+                penalizing_minmaxmapper(&temp, blue, green, green, red, red, blue, palette, __crt_countof(palette), rnd);
+                penalizing_minmaxmapper(&temp, blue, green, green, red, red, blue, palette_minimal, __crt_countof(palette_minimal), rnd);
+                penalizing_minmaxmapper(&temp, blue, green, green, red, red, blue, palette_extended, __crt_countof(palette_extended), rnd);
+
+                penalizing_luminositymapper(&temp, blue, green, green, red, red, blue, palette, __crt_countof(palette), rnd);
+                penalizing_luminositymapper(
+                    &temp, blue, green, green, red, red, blue, palette_minimal, __crt_countof(palette_minimal), rnd
+                );
+                penalizing_luminositymapper(
+                    &temp, blue, green, green, red, red, blue, palette_extended, __crt_countof(palette_extended), rnd
+                );
+
+                // test penalizing block mappers
             }
         }
     }
