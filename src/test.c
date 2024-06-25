@@ -160,6 +160,7 @@ int wmain(void) {
                 );
 
                 // test penalizing block mappers
+                penalizing_arithmeticblockmapper(blue, green, red);
             }
         }
     }
@@ -204,6 +205,7 @@ int wmain(void) {
         const wchar_t* const restrict wstr = to_string(&image);
         if (!wstr) {
             wprintf_s(L"Error :: cannot process %s!\n", *_ptr);
+            bitmap_close(&image);
             continue;
         }
 

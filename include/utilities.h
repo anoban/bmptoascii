@@ -13,6 +13,7 @@
 
 #define ONE 1.000000000F
 
+#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -362,16 +363,106 @@ static inline wchar_t __stdcall tunable_blockmapper(
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
 
-static inline wchar_t __stdcall penalizing_blockmapper(
-    _In_ const register float   rgbBlue,
-    _In_ const register float   rgbGreen,
-    _In_ const register float   rgbRed,
-    _In_ const register uint8_t bthresh, // penalty threshold for blue
-    _In_ const register uint8_t gthresh, // penalty threshold for green
-    _In_ const register uint8_t rthresh, // penalty threshold for red
+#pragma endregion
+
+#pragma region __PENALIZING_BLOCK_MAPPERS__
+
+static __forceinline wchar_t __stdcall penalizing_arithmeticblockmapper(
+    _In_ const register float rgbBlue,
+    _In_ const register float rgbGreen,
+    _In_ const register float rgbRed,
+    _In_ const register float bllim,
+    _In_ const register float bulim,
+    _In_ const register float gllim,
+    _In_ const register float gulim,
+    _In_ const register float rllim,
+    _In_ const register float rulim,
     _In_ const wchar_t* const restrict palette,
-    _In_ const unsigned       plength,
-    _In_ const register float penalty
-) { }
+    _In_ const register unsigned plength,
+    _In_ const register float    penalty
+) {
+    // this mapper is incredibly expensive compared to the alternatives and hence using this with a 0.000 penalty will be ridiculous!
+    // because you'll be paying dearly for something you do not need!
+    assert(penalty >= 0.00000 && penalty <= ONE);
+
+    const bool penalize = ((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
+                          ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
+                          ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim));
+
+    const unsigned offset =
+        ((rgbBlue + rgbGreen + rgbRed) / 3.000) /* an enclosing parens here because we do not want zero division exceptions */
+        * (penalize ? (ONE - penalty) : 1);
+    return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
+}
+
+static __forceinline wchar_t __stdcall penalizing_weightedblockmapper(
+    _In_ const register float rgbBlue,
+    _In_ const register float rgbGreen,
+    _In_ const register float rgbRed,
+    _In_ const register float bllim,
+    _In_ const register float bulim,
+    _In_ const register float gllim,
+    _In_ const register float gulim,
+    _In_ const register float rllim,
+    _In_ const register float rulim,
+    _In_ const wchar_t* const restrict palette,
+    _In_ const register unsigned plength,
+    _In_ const register float    penalty
+) {
+    assert(penalty >= 0.00000 && penalty <= ONE);
+    const bool penalize = ((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
+                          ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
+                          ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim));
+
+    const unsigned offset = (rgbBlue * 0.299 + rgbGreen * 0.587 + rgbRed * 0.114) * (penalize ? (ONE - penalty) : 1);
+    return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
+}
+
+static __forceinline wchar_t __stdcall penalizing_minmaxblockmapper(
+    _In_ const register float rgbBlue,
+    _In_ const register float rgbGreen,
+    _In_ const register float rgbRed,
+    _In_ const register float bllim,
+    _In_ const register float bulim,
+    _In_ const register float gllim,
+    _In_ const register float gulim,
+    _In_ const register float rllim,
+    _In_ const register float rulim,
+    _In_ const wchar_t* const restrict palette,
+    _In_ const register unsigned plength,
+    _In_ const register float    penalty
+) {
+    assert(penalty >= 0.00000 && penalty <= ONE);
+    const bool penalize = ((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
+                          ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
+                          ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim));
+
+    const unsigned offset =
+        ((min(min(rgbBlue, rgbGreen), rgbRed) + max(max(rgbBlue, rgbGreen), rgbRed)) / 2.0000) * (penalize ? (ONE - penalty) : 1);
+    return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
+}
+
+static __forceinline wchar_t __stdcall penalizing_luminosityblockmapper(
+    _In_ const register float rgbBlue,
+    _In_ const register float rgbGreen,
+    _In_ const register float rgbRed,
+    _In_ const register float bllim,
+    _In_ const register float bulim,
+    _In_ const register float gllim,
+    _In_ const register float gulim,
+    _In_ const register float rllim,
+    _In_ const register float rulim,
+    _In_ const wchar_t* const restrict palette,
+    _In_ const register unsigned plength,
+    _In_ const register float    penalty
+) {
+    assert(penalty >= 0.00000 && penalty <= ONE);
+    const bool penalize = ((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
+                          ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
+                          ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim));
+
+    const unsigned offset = (rgbBlue * 0.2126 + rgbGreen * 0.7152 + rgbRed * 0.0722) * (penalize ? (ONE - penalty) : 1);
+    return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
+}
 
 #pragma endregion

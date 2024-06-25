@@ -94,5 +94,5 @@ static inline bitmap_t __cdecl bitmap_read(_In_ const wchar_t* const restrict fi
 // use this to cleanup a bitmap_t after its use
 static inline void __cdecl bitmap_close(_In_ bitmap_t* const restrict image) {
     free(image->_buffer);
-    memset(image, 0u, sizeof(bitmap_t));
+    memset(image, 0U, sizeof(bitmap_t));
 }
