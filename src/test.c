@@ -160,7 +160,42 @@ int wmain(void) {
                 );
 
                 // test penalizing block mappers
-                penalizing_arithmeticblockmapper(blue, green, red);
+                for (unsigned b = 0; b <= UCHAR_MAX; ++b) {
+                    for (unsigned g = 0; g <= UCHAR_MAX; ++g)
+                        for (unsigned r = 0; r <= UCHAR_MAX; ++r) {
+                            penalizing_arithmeticblockmapper(blue, green, red, b, g, g, r, r, b, palette, __crt_countof(palette), rnd);
+                            penalizing_arithmeticblockmapper(
+                                blue, green, red, b, g, g, r, r, b, palette_minimal, __crt_countof(palette_minimal), rnd
+                            );
+                            penalizing_arithmeticblockmapper(
+                                blue, green, red, b, g, g, r, r, b, palette_extended, __crt_countof(palette_extended), rnd
+                            );
+
+                            penalizing_weightedblockmapper(blue, green, red, b, g, g, r, r, b, palette, __crt_countof(palette), rnd);
+                            penalizing_weightedblockmapper(
+                                blue, green, red, b, g, g, r, r, b, palette_minimal, __crt_countof(palette_minimal), rnd
+                            );
+                            penalizing_weightedblockmapper(
+                                blue, green, red, b, g, g, r, r, b, palette_extended, __crt_countof(palette_extended), rnd
+                            );
+
+                            penalizing_minmaxblockmapper(blue, green, red, b, g, g, r, r, b, palette, __crt_countof(palette), rnd);
+                            penalizing_minmaxblockmapper(
+                                blue, green, red, b, g, g, r, r, b, palette_minimal, __crt_countof(palette_minimal), rnd
+                            );
+                            penalizing_minmaxblockmapper(
+                                blue, green, red, b, g, g, r, r, b, palette_extended, __crt_countof(palette_extended), rnd
+                            );
+
+                            penalizing_luminosityblockmapper(blue, green, red, b, g, g, r, r, b, palette, __crt_countof(palette), rnd);
+                            penalizing_luminosityblockmapper(
+                                blue, green, red, b, g, g, r, r, b, palette_minimal, __crt_countof(palette_minimal), rnd
+                            );
+                            penalizing_luminosityblockmapper(
+                                blue, green, red, b, g, g, r, r, b, palette_extended, __crt_countof(palette_extended), rnd
+                            );
+                        }
+                }
             }
         }
     }
