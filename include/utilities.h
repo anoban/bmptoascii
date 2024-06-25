@@ -19,13 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// this is how wingdi defines these two structs!!
-// typedef struct tagRGBTRIPLE {
-//         BYTE    rgbtBlue;
-//         BYTE    rgbtGreen;
-//         BYTE    rgbtRed;
-// } RGBTRIPLE, *PRGBTRIPLE, NEAR *NPRGBTRIPLE, FAR *LPRGBTRIPLE;
-
 // typedef struct tagRGBQUAD {
 //         BYTE rgbBlue;
 //         BYTE rgbGreen;

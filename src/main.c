@@ -1,4 +1,4 @@
-#ifndef __TEST_BMPT_ASCII__
+#ifndef __TEST_BMPTOASCII__
 
     #include <tostring.h>
 
@@ -37,4 +37,4 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
     return EXIT_SUCCESS;
 }
 
-#endif // !__TEST_BMPT_ASCII__
+#endif // !__TEST_BMPTOASCII__

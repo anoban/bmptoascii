@@ -1,6 +1,6 @@
-// clang .\src\test.c -I .\include\ -Wall -Wextra -O3 -pedantic -march=native -std=c23 -D__TEST_BMPT_ASCII__
+// clang .\src\test.c -I .\include\ -Wall -Wextra -O3 -pedantic -march=native -std=c23 -D__TEST_BMPTOASCII__
 
-#ifdef __TEST_BMPT_ASCII__
+#ifdef __TEST_BMPTOASCII__
     #define __WANT_PRIMITIVE_TRANSFORMERS__
     #include <time.h>
     #include <tostring.h>
@@ -220,4 +220,4 @@ int wmain(void) {
     return EXIT_SUCCESS;
 }
 
-#endif // __TEST_BMPT_ASCII__
+#endif // __TEST_BMPTOASCII__
