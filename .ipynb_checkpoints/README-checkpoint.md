@@ -81,11 +81,9 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 <div><img src="./readme/football.jpg"  width=45%> <img src="./readme/supergirl.jpg" width=45%></div>
 <div><img src="./readme/vendetta.jpg"  width=45%> <img src="./readme/jennifer.jpg"  width=45%></div>
 
-___Consider the following transformation,___
-<div><img src="./readme/sydney.jpeg" width=400 height=500> <img src="./readme/sydney.jpg" width=400></div>
-
 ### ___Caveats___
 -----------------
+
 - Doesn't support any other image formats.
 - Only supports bitmaps with bottom-up scanline ordering since the majority of the bitmaps in contemporary use are of this type. Bitmaps with top-down scanline order will result in a runtime error!.
 - Owing to the liberal reliance on `Win32` API, will not compile on UNIX systems without substantial effort.
