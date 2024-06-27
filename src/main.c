@@ -7,8 +7,7 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
-    const wchar_t* const bitmaps[] = { L"child.bmp", L"football.bmp", L"jennifer.bmp", L"messi.bmp", L"supergirl.bmp", L"sydney.bmp",
-                                       L"time.bmp",  L"vendetta.bmp", L"woman.bmp",    L"face.bmp",  L"lady.bmp",      NULL };
+    const wchar_t* const bitmaps[] = { /* provide the paths here */ NULL };
     const wchar_t**      _ptr      = bitmaps;
     while (*_ptr) {
         bitmap_t image                     = bitmap_read(*_ptr);

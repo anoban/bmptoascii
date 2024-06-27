@@ -10,7 +10,9 @@
 #define spalette       palette_extended                                           // PICK ONE OF THE THREE AVALIABLE PALETTES
 #define map(_pixel)    weighted_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
 #define blockmap(blue, green, red)                                                                                                         \
-    weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette)) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
+    penalizing_weightedblockmapper(                                                                                                        \
+        blue, green, red, 190, 220, 190, 215, 240, 255, spalette, __crt_countof(spalette), 0.75                                            \
+    ) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
 // IT IS NOT OBLIGATORY FOR BOTH THE BASIC MAPPER AND THE BLOCK MAPPER TO USE THE SAME PALETTE
 // IF NEED BE, THE PALETTE EXPANDED FROM spalette COULD BE REPLACED BY A REAL PALETTE NAME
 
@@ -125,9 +127,9 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
 
     // row = image->_infoheader.biHeight will get us to the last pixel of the first (last in the buffer) scanline with (r * image->_infoheader.biWidth)
     // hence, row = image->_infoheader.biHeight - 1 so we can traverse pixels in the first scanline with (r * image->_infoheader.biWidth) + c
-    for (row = image->_infoheader.biHeight - 1; row >= block_d; row -= block_d) {    // start the traversal at the bottom most scan line
-                                                                                     // wprintf_s(L"row = %lld\n", row);
-        for (col = 0; col <= image->_infoheader.biWidth - block_d; col += block_d) { // traverse left to right in scan lines
+    for (row = image->_infoheader.biHeight - 1; row >= (block_d - 1); row -= block_d) { // start the traversal at the bottom most scan line
+                                                                                        // wprintf_s(L"row = %lld\n", row);
+        for (col = 0; col <= image->_infoheader.biWidth - block_d; col += block_d) {    // traverse left to right in scan lines
             // wprintf_s(L"row = %lld, col = %lld\n", row, col);
 
             for (int64_t r = row; r > row - block_d; --r) { // deal with blocks
@@ -161,8 +163,6 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
             buffer[caret++] = blockmap(blockavg_blue, blockavg_green, blockavg_red);
             blockavg_blue = blockavg_green = blockavg_red = 0.000;
         }
-
-        // wprintf_s(L"col = %lld\n", col);
 
         if (block_rows_end_with_incomplete_blocks) { // if there are partially filled blocks at the end of this row of blocks,
 
@@ -203,18 +203,20 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
         buffer[caret++] = L'\r';
     }
 
-    // wprintf_s(L"full = %llu\n", full);
-    // wprintf_s(L"incomplete = %llu\n", incomplete);
-    // wprintf_s(L"row = %lld\n", row);
+#ifdef _DEBUG
+    wprintf_s(L"%5llu complete blocks have been processed!\n", full);
+    wprintf_s(L"%5llu incomplete blocks at the right edge have been processed\n", incomplete);
+#endif
+
     assert(row < block_d);
+
+#ifdef _DEBUG
+    incomplete = 0;
+#endif
 
     if (block_columns_end_with_incomplete_blocks) { // process the last incomplete row of pixel blocks here,
 
         for (col = 0; col < image->_infoheader.biWidth; col += block_d) { // col must be 0 at the start of this loop
-
-#ifdef _DEBUG
-            incomplete = 0;
-#endif
 
             for (int64_t r = row; r >= 0; --r) {                // r delimits the start row of the block being defined
                 for (int64_t c = col; c < col + block_d; ++c) { // c delimits the start column of the block being defined
@@ -229,6 +231,10 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
             blockavg_green /= pblocksize_bottom;
             blockavg_red   /= pblocksize_bottom;
 
+#ifdef _DEBUG
+            incomplete++;
+#endif
+
             // if (!(blockavg_blue <= 255.00 && blockavg_green <= 255.00 && blockavg_red <= 255.00))
             //     wprintf_s(L"Average (BGR) = (%.4f, %.4f, %.4f)\n", blockavg_blue, blockavg_green, blockavg_red);
 
@@ -242,10 +248,13 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
     }
 
     buffer[caret++] = 0; // using the last byte as null terminator
-                         // here's an edge case -
 
     // now caret == nwchars, so an attempt to write at caret will now raise an access violation exception or a heap corruption error
+#ifdef _DEBUG
+    wprintf_s(L"%5llu incomplete blocks at the bottom have been processed\n", incomplete);
     wprintf_s(L"caret :: %lld, nwchars :: %lld\n", caret, nwchars);
+#endif
+
     assert(caret == nwchars);
     return buffer;
 }
