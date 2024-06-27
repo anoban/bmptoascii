@@ -1,16 +1,19 @@
 #pragma once
 #include <bitmap.h>
 
-#define CONSOLE_WIDTH  140LL
-#define CONSOLE_WIDTHR 140.0
+#define CONSOLE_WIDTH              140LL
+#define CONSOLE_WIDTHR             140.0
 
 ////////////////////////////////////
 //    PLACE FOR CUSTOMIZATIONS    //
 ////////////////////////////////////
-#define spalette       palette_extended                                           // PICK ONE OF THE THREE AVALIABLE PALETTES
-#define map(_pixel)    weighted_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
-#define blockmap(blue, green, red)                                                                                                         \
-    weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette), 0.75) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
+#define spalette                   palette_extended                                           // PICK ONE OF THE THREE AVALIABLE PALETTES
+#define map(_pixel)                weighted_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
+// #define blockmap(blue, green, red)                                                                                                         \
+//     weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette), 0.75) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
+
+#define blockmap(blue, green, red) penalizing_luminosityblockmapper(blue, green, red, )
+
 // IT IS NOT OBLIGATORY FOR BOTH THE BASIC MAPPER AND THE BLOCK MAPPER TO USE THE SAME PALETTE
 // IF NEED BE, THE PALETTE EXPANDED FROM spalette COULD BE REPLACED BY A REAL PALETTE NAME
 

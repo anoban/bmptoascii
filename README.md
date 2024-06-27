@@ -78,8 +78,11 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 ### ___Examples with the default `weighted_blockmapper()`___
 ------
 
-<div><img src="./readme/football.jpg"  width=400> <img src="./readme/supergirl.jpg" width=400></div>
-<div><img src="./readme/vendetta.jpg"  width=400> <img src="./readme/jennifer.jpg"  width=400></div>
+<div><img src="./readme/football.jpg"  width=45%> <img src="./readme/supergirl.jpg" width=45%></div>
+<div><img src="./readme/vendetta.jpg"  width=45%> <img src="./readme/jennifer.jpg"  width=45%></div>
+
+___Consider the following transformation,___
+<div><img src="./readme/sydney.jpeg" width=400 height=500> <img src="./readme/sydney.jpg" width=400></div>
 
 ### ___Caveats___
 -----------------
@@ -89,3 +92,4 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 - Not particularly good at capturing specific details in images, especially if the images are large and those details are represented by granular differences in colour gradients (this specificity gets lost in the black and white transformation and downscaling)
 - Best results with colour images are obtained when there's a stark contrast between the object of interest and the background (even with a penalizing mapper).
 
+___For a comprehensive explanation of the implementation, browse the source code, it is thoroughly annotated!.___
