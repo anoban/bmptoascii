@@ -10,9 +10,7 @@
 #define spalette       palette_extended                                           // PICK ONE OF THE THREE AVALIABLE PALETTES
 #define map(_pixel)    weighted_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
 #define blockmap(blue, green, red)                                                                                                         \
-    penalizing_weightedblockmapper(                                                                                                        \
-        blue, green, red, 190, 220, 190, 215, 240, 255, spalette, __crt_countof(spalette), 0.75                                            \
-    ) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
+    weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette), 0.75) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
 // IT IS NOT OBLIGATORY FOR BOTH THE BASIC MAPPER AND THE BLOCK MAPPER TO USE THE SAME PALETTE
 // IF NEED BE, THE PALETTE EXPANDED FROM spalette COULD BE REPLACED BY A REAL PALETTE NAME
 

@@ -5,22 +5,13 @@ _Examples in the README use JPEG version of the bitmaps because BMPs take up too
 
 Three ascii palettes are available in `<utilities.h>` to choose the characters from. These are arrays of wide ascii characters ordered in increasing luminance:
 ```C
-static const wchar_t palette_minimal[]  = { L'_', L'.', L',', L'-', L'=', L'+', L':', L';', L'c', L'b', L'a', L'!', L'?', L'1',
-                                            L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L'$', L'W', L'#', L'@', L'N' };
-
-static const wchar_t palette[]          = { L' ', L'.', L'-', L',', L':', L'+', L'~', L';', L'(', L'%', L'x', L'1', L'*', L'n', L'u',
-                                            L'T', L'3', L'J', L'5', L'$', L'S', L'4', L'F', L'P', L'G', L'O', L'V', L'X', L'E', L'Z',
-                                            L'8', L'A', L'U', L'D', L'H', L'K', L'W', L'@', L'B', L'Q', L'#', L'0', L'M', L'N' };
-
-static const wchar_t palette_extended[] = { L' ',  L'.', L'\'', L'`', L'^', L'"', L',', L':', L';', L'I', L'l', L'!', L'i', L'>',
-                                            L'<',  L'~', L'+',  L'_', L'-', L'?', L']', L'[', L'}', L'{', L'1', L')', L'(', L'|',
-                                            L'\\', L'/', L't',  L'f', L'j', L'r', L'x', L'n', L'u', L'v', L'c', L'z', L'X', L'Y',
-                                            L'U',  L'J', L'C',  L'L', L'Q', L'0', L'O', L'Z', L'm', L'w', L'q', L'p', L'd', L'b',
-                                            L'k',  L'h', L'a',  L'o', L'*', L'#', L'M', L'W', L'&', L'8', L'%', L'B', L'@', L'$' };
+static const wchar_t palette_minimal[]  = { ... };
+static const wchar_t palette[]          = { ... };
+static const wchar_t palette_extended[] = { ... };
 
 ```
 
-For the RGB to ascii conversion a string of mappers are available in `<utilities.h>`:
+For the RGB to ascii conversion, a string of mappers are available in `<utilities.h>`:
 
 ```C
 // uses the arithmetic average of the red, green and blue values of the pixel to determine which wide character to map
@@ -55,6 +46,8 @@ There are also an array of penalizing mappers in `<utilities.h>` that facilitate
 
 ```C
 
+// this mapper will penalize the result of the mapper by the specified penalty value
+// when the pixel's RGB values all fall within the ranges specified by the <>llim (lower limit) and <>ulim (upper limit) delimiters.
 static __forceinline wchar_t __stdcall penalizing_arithmeticmapper(
     _In_ const register RGBQUAD* const restrict pixel,
     _In_ const register uint8_t bllim, // lower limit for blue pixels
@@ -76,10 +69,11 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 
 ```
 
-### ___Examples___
+### ___Examples with the default `weighted_blockmapper()`___
 ------
 
-<div><img src="./readme/football.jpg"  width=400> <img src="./readme/supergirl.jpg" width=400> <img src="./readme/vendetta.jpg"  width=400></div>
+<div><img src="./readme/football.jpg"  width=400> <img src="./readme/supergirl.jpg" width=400></div>
+<div><img src="./readme/vendetta.jpg"  width=400> <img src="./readme/jennifer.jpg"  width=400></div>
 
 ### ___Caveats___
 -----------------
