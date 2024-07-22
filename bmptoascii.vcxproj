@@ -58,6 +58,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -65,6 +66,7 @@
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>Spectre</SpectreMitigation>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -98,19 +100,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\bmptoascii\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\include\;$(IncludePath)</IncludePath>
     <OutDir>.\bin\$(Configuration)\</OutDir>
     <IntDir>.\bin\$(Configuration)\</IntDir>
+    <LibraryPath>$(VC_LibraryPath_VC_x64_Desktop);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
-    <IncludePath>D:\bmptoascii\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\include\;$(IncludePath)</IncludePath>
     <OutDir>.\bin\$(Configuration)\</OutDir>
     <IntDir>.\bin\$(Configuration)\</IntDir>
+    <LibraryPath>$(VC_LibraryPath_VC_x64_Desktop);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>D:\bmptoascii\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\include\;$(IncludePath)</IncludePath>
     <OutDir>.\bin\$(Configuration)\</OutDir>
     <IntDir>.\bin\$(Configuration)\</IntDir>
+    <LibraryPath>$(VC_LibraryPath_VC_x64_Desktop);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -166,10 +171,10 @@
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <ExceptionHandling>false</ExceptionHandling>
       <ControlFlowGuard>false</ControlFlowGuard>
-      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <EnableParallelCodeGeneration>false</EnableParallelCodeGeneration>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <DisableSpecificWarnings>4710;4711;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4710;4711;4242;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -190,17 +195,17 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <ExceptionHandling>false</ExceptionHandling>
       <ControlFlowGuard>false</ControlFlowGuard>
-      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <EnableParallelCodeGeneration>false</EnableParallelCodeGeneration>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <FloatingPointModel>Precise</FloatingPointModel>
-      <DisableSpecificWarnings>4710;4711;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4710;4711;4242;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -228,7 +233,7 @@
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DebugInformationFormat>None</DebugInformationFormat>
-      <DisableSpecificWarnings>4710;4711;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4710;4711;4242;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
