@@ -8,7 +8,6 @@ Three ascii palettes are available in `<utilities.h>` to choose the characters f
 static const wchar_t palette_minimal[]  = { ... };
 static const wchar_t palette[]          = { ... };
 static const wchar_t palette_extended[] = { ... };
-
 ```
 
 For the RGB to ascii conversion, a string of mappers are available in `<utilities.h>`:
@@ -44,13 +43,11 @@ static inline wchar_t __stdcall tunable_mapper(
     _In_ const wchar_t* const restrict palette,
     _In_ const unsigned plength
 );
-
 ```
 
-There are also an array of penalizing mappers in `<utilities.h>` that facilitate penaliztion of the character mapping process of pixels that meet the specified criteria:
+There are also an array of penalizing mappers in `<utilities.h>` that facilitate penaliztion of the character mapping process of pixels that meet a specified criteria:
 
 ```C
-
 // this mapper will penalize the result of the mapper by the specified penalty value
 // when the pixel's RGB values all fall within the ranges specified by the <>llim (lower limit)
 // and <>ulim (upper limit) delimiters.
@@ -68,11 +65,8 @@ static __forceinline wchar_t __stdcall penalizing_arithmeticmapper(
 );
 
 static inline wchar_t __stdcall penalizing_weightedmapper(...);
-
 static inline wchar_t __stdcall penalizing_minmaxmapper(...);
-
 static inline wchar_t __stdcall penalizing_luminositymapper(...);
-
 ```
 
 ### ___Examples with the default `weighted_blockmapper()`___
@@ -81,11 +75,11 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 <div><img src="./readme/football.jpg"  width=45%> <img src="./readme/supergirl.jpg" width=45%></div>
 <div><img src="./readme/vendetta.jpg"  width=45%> <img src="./readme/jennifer.jpg"  width=45%></div>
 
-### ___Caveats___
+### ___Disclaimer___
 -----------------
 
 - Doesn't support any other image formats.
-- Only supports bitmaps with bottom-up scanline ordering since the majority of the bitmaps in contemporary use are of this type. Bitmaps with top-down scanline order will result in a runtime error!.
+- Only supports bitmaps with bottom-up scanline ordering (majority of the bitmaps in contemporary use are of this type). Bitmaps with top-down scanline order will result in a runtime error.
 - Owing to the liberal reliance on `Win32` API, will not compile on UNIX systems without substantial effort.
 - Not particularly good at capturing specific details in images, especially if the images are large and those details are represented by granular differences in colour gradients (this specificity gets lost in the black and white transformation and downscaling)
 - Best results with colour images are obtained when there's a stark contrast between the object of interest and the background (even with a penalizing mapper).
