@@ -76,7 +76,7 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 
 <div><img src="./readme/jennifer_lawrence.jpg"  width=45%> <img src="./readme/jennifer.jpg" width=45%></div>
 <div><img src="./readme/vendetta-wallpaper.jpg"  width=45%> <img src="./readme/vendetta.jpg" width=45%></div>
-<div><img src="./readme/ginger__woman.jpg"  width=45%> <img src="./readme/ginger.jpg" width=45%></div>
+<div><img src="./readme/ginger_woman.jpg"  width=45%> <img src="./readme/ginger.jpg" width=45%></div>
 
 ### ___Disclaimer___
 -----------------
