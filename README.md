@@ -32,7 +32,9 @@ static inline wchar_t __stdcall minmax_mapper(...);
 // uses a predetermined set of weights (different from the weights used by weighted_mapper) for
 // red, green and blue values of the pixel to determine the wide character
 static inline wchar_t __stdcall luminosity_mapper(...);
+```
 
+```C
 // allows customization of the weights that were predetermined in the weighted and luminosity
 // mappers
 static inline wchar_t __stdcall tunable_mapper(
@@ -72,8 +74,9 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 ### ___Examples with the default `weighted_blockmapper()`___
 ------
 
-<div><img src="./readme/football.jpg"  width=45%> <img src="./readme/supergirl.jpg" width=45%></div>
-<div><img src="./readme/vendetta.jpg"  width=45%> <img src="./readme/jennifer.jpg"  width=45%></div>
+<div><img src="./readme/jennifer_lawrence.jpg"  width=45%> <img src="./readme/jennifer.jpg" width=45%></div>
+<div><img src="./readme/vendetta-wallpaper.jpg"  width=45%> <img src="./readme/vendetta.jpg" width=45%></div>
+<div><img src="./readme/ginger__woman.jpg"  width=45%> <img src="./readme/ginger.jpg" width=45%></div>
 
 ### ___Disclaimer___
 -----------------

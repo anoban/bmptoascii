@@ -12,7 +12,7 @@
 // #define blockmap(blue, green, red)                                                                                                         \
 //     weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette), 0.75) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
 
-#define blockmap(blue, green, red) weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette))
+#define blockmap(blue, green, red) arithmetic_blockmapper(blue, green, red, spalette, __crt_countof(spalette))
 
 // IT IS NOT OBLIGATORY FOR BOTH THE BASIC MAPPER AND THE BLOCK MAPPER TO USE THE SAME PALETTE
 // IF NEED BE, THE PALETTE EXPANDED FROM spalette COULD BE REPLACED BY A REAL PALETTE NAME
