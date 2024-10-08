@@ -20,6 +20,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef _DEBUG
+    #define dbgwprintf_s(...) wprintf_s(__VA_ARGS__)
+    #define DEBUG_ONLY(...)   (__VA_ARGS__)
+#else
+    #define dbgwprintf_s(...)
+    #define DEBUG_ONLY(...)
+#endif // _DEBUG
+
 // typedef struct tagRGBQUAD {
 //         BYTE rgbBlue;
 //         BYTE rgbGreen;

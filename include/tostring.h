@@ -7,12 +7,11 @@
 ////////////////////////////////////
 //    PLACE FOR CUSTOMIZATIONS    //
 ////////////////////////////////////
-#define spalette                   palette_extended                                           // PICK ONE OF THE THREE AVALIABLE PALETTES
-#define map(_pixel)                weighted_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
-// #define blockmap(blue, green, red)                                                                                                         \
-//     weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette), 0.75) // CHOOSE A BLOCK MAPPER OF YOUR LIKING
+#define spalette                   palette                                                      // PICK ONE OF THE THREE AVALIABLE PALETTES
+#define map(_pixel)                arithmetic_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
 
-#define blockmap(blue, green, red) arithmetic_blockmapper(blue, green, red, spalette, __crt_countof(spalette))
+// CHOOSE A BLOCK MAPPER OF YOUR LIKING
+#define blockmap(blue, green, red) weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette))
 
 // IT IS NOT OBLIGATORY FOR BOTH THE BASIC MAPPER AND THE BLOCK MAPPER TO USE THE SAME PALETTE
 // IF NEED BE, THE PALETTE EXPANDED FROM spalette COULD BE REPLACED BY A REAL PALETTE NAME
@@ -107,22 +106,20 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
         image->_infoheader.biHeight % block_d; // true if the image height is not divisible by block_d without remainders
     // NOLINTEND(readability-isolate-declaration)
 
-#ifdef _DEBUG
-    wprintf_s(L"Width :: %6ld, Height :: %6ld\n", image->_infoheader.biWidth, image->_infoheader.biHeight);
-    wprintf_s(L"Size of the square block :: %6lld\n", block_d);
-    wprintf_s(L"Number of blocks along the x axis :: %6lld\n", nblocks_w);
-    wprintf_s(
+    dbgwprintf_s(L"Width :: %6ld, Height :: %6ld\n", image->_infoheader.biWidth, image->_infoheader.biHeight);
+    dbgwprintf_s(L"Size of the square block :: %6lld\n", block_d);
+    dbgwprintf_s(L"Number of blocks along the x axis :: %6lld\n", nblocks_w);
+    dbgwprintf_s(
         L"Dimension of the incomplete block along the x axis (w, h) :: (%3lld, %3lld)\n",
         image->_infoheader.biWidth - (image->_infoheader.biWidth / block_d) * block_d,
         nblocks_w
     );
-    wprintf_s(L"Number of blocks along the y axis :: %6lld\n", nblocks_h);
-    wprintf_s(
+    dbgwprintf_s(L"Number of blocks along the y axis :: %6lld\n", nblocks_h);
+    dbgwprintf_s(
         L"Dimension of the incomplete block along the y axis (w, h) :: (%3lld, %3lld)\n",
         nblocks_w,
         image->_infoheader.biHeight - (image->_infoheader.biHeight / block_d) * block_d
     );
-#endif // _DEBUG
 
     uint64_t full = 0, incomplete = 0, count = 0; // NOLINT(readability-isolate-declaration)
 
@@ -139,21 +136,14 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
                     blockavg_blue  += image->_pixels[offset].rgbBlue;
                     blockavg_green += image->_pixels[offset].rgbGreen;
                     blockavg_red   += image->_pixels[offset].rgbRed;
-#ifdef _DEBUG
-                    count++;
-#endif
+
+                    DEBUG_ONLY(count++);
                 }
             }
 
-#ifdef _DEBUG
-            full++;
-#endif
-
+            DEBUG_ONLY(full++);
             assert(count == block_d * block_d);
-
-#ifdef _DEBUG
-            count = 0;
-#endif
+            DEBUG_ONLY(count = 0);
 
             blockavg_blue  /= blocksize;
             blockavg_green /= blocksize;
@@ -175,20 +165,13 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
                     blockavg_green += image->_pixels[offset].rgbGreen;
                     blockavg_red   += image->_pixels[offset].rgbRed;
 
-#ifdef _DEBUG
-                    count++;
-#endif
+                    DEBUG_ONLY(count++);
                 }
             }
 
-#ifdef _DEBUG
-            incomplete++;
-#endif
+            DEBUG_ONLY(incomplete++);
             assert(count == pblocksize_right); // fails
-
-#ifdef _DEBUG
-            count = 0;
-#endif
+            DEBUG_ONLY(count = 0);
 
             blockavg_blue  /= pblocksize_right;
             blockavg_green /= pblocksize_right;
@@ -204,16 +187,10 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
         buffer[caret++] = L'\r';
     }
 
-#ifdef _DEBUG
-    wprintf_s(L"%5llu complete blocks have been processed!\n", full);
-    wprintf_s(L"%5llu incomplete blocks at the right edge have been processed\n", incomplete);
-#endif
-
+    dbgwprintf_s(L"%5llu complete blocks have been processed!\n", full);
+    dbgwprintf_s(L"%5llu incomplete blocks at the right edge have been processed\n", incomplete);
     assert(row < block_d);
-
-#ifdef _DEBUG
-    incomplete = 0;
-#endif
+    DEBUG_ONLY(incomplete = 0);
 
     if (block_columns_end_with_incomplete_blocks) { // process the last incomplete row of pixel blocks here,
 
@@ -232,9 +209,7 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
             blockavg_green /= pblocksize_bottom;
             blockavg_red   /= pblocksize_bottom;
 
-#ifdef _DEBUG
-            incomplete++;
-#endif
+            DEBUG_ONLY(incomplete++);
 
             // if (!(blockavg_blue <= 255.00 && blockavg_green <= 255.00 && blockavg_red <= 255.00))
             //     wprintf_s(L"Average (BGR) = (%.4f, %.4f, %.4f)\n", blockavg_blue, blockavg_green, blockavg_red);
@@ -251,12 +226,11 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
     buffer[caret++] = 0; // using the last byte as null terminator
 
     // now caret == nwchars, so an attempt to write at caret will now raise an access violation exception or a heap corruption error
-#ifdef _DEBUG
-    wprintf_s(L"%5llu incomplete blocks at the bottom have been processed\n", incomplete);
-    wprintf_s(L"caret :: %lld, nwchars :: %lld\n", caret, nwchars);
-#endif
 
+    dbgwprintf_s(L"%5llu incomplete blocks at the bottom have been processed\n", incomplete);
+    dbgwprintf_s(L"caret :: %lld, nwchars :: %lld\n", caret, nwchars);
     assert(caret == nwchars);
+
     return buffer;
 }
 

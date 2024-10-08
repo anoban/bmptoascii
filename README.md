@@ -47,7 +47,7 @@ static inline wchar_t __stdcall tunable_mapper(
 );
 ```
 
-There are also an array of penalizing mappers in `<utilities.h>` that facilitate penaliztion of the character mapping process of pixels that meet a specified criteria:
+There are also an array of penalizing transformers in `<utilities.h>` that facilitate penaliztion of character mapping when pixels meet a specified criteria:
 
 ```C
 // this mapper will penalize the result of the mapper by the specified penalty value
@@ -55,8 +55,8 @@ There are also an array of penalizing mappers in `<utilities.h>` that facilitate
 // and <>ulim (upper limit) delimiters.
 static __forceinline wchar_t __stdcall penalizing_arithmeticmapper(
     _In_ const register RGBQUAD* const restrict pixel,
-    _In_ const register uint8_t bllim, // lower limit for blue pixels
-    _In_ const register uint8_t bulim, // upper limit for blue pixels
+    _In_ const register uint8_t bllim, // lower limit for blue
+    _In_ const register uint8_t bulim, // upper limit for blue
     _In_ const register uint8_t gllim,
     _In_ const register uint8_t gulim,
     _In_ const register uint8_t rllim,
@@ -78,7 +78,7 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 <div><img src="./readme/vendetta-wallpaper.jpg"  width=45%> <img src="./readme/vendetta.jpg" width=45%></div>
 <div><img src="./readme/ginger_woman.jpg"  width=45%> <img src="./readme/ginger.jpg" width=45%></div>
 
-### ___Disclaimer___
+### ___Caveats___
 -----------------
 
 - Doesn't support any other image formats.
