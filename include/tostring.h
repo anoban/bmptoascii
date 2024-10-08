@@ -137,13 +137,13 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
                     blockavg_green += image->_pixels[offset].rgbGreen;
                     blockavg_red   += image->_pixels[offset].rgbRed;
 
-                    DEBUG_ONLY(count++);
+                    DEBUG_EXEC(count++);
                 }
             }
 
-            DEBUG_ONLY(full++);
+            DEBUG_EXEC(full++);
             assert(count == block_d * block_d);
-            DEBUG_ONLY(count = 0);
+            DEBUG_EXEC(count = 0);
 
             blockavg_blue  /= blocksize;
             blockavg_green /= blocksize;
@@ -165,13 +165,13 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
                     blockavg_green += image->_pixels[offset].rgbGreen;
                     blockavg_red   += image->_pixels[offset].rgbRed;
 
-                    DEBUG_ONLY(count++);
+                    DEBUG_EXEC(count++);
                 }
             }
 
-            DEBUG_ONLY(incomplete++);
+            DEBUG_EXEC(incomplete++);
             assert(count == pblocksize_right); // fails
-            DEBUG_ONLY(count = 0);
+            DEBUG_EXEC(count = 0);
 
             blockavg_blue  /= pblocksize_right;
             blockavg_green /= pblocksize_right;
@@ -190,7 +190,7 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
     dbgwprintf_s(L"%5llu complete blocks have been processed!\n", full);
     dbgwprintf_s(L"%5llu incomplete blocks at the right edge have been processed\n", incomplete);
     assert(row < block_d);
-    DEBUG_ONLY(incomplete = 0);
+    DEBUG_EXEC(incomplete = 0);
 
     if (block_columns_end_with_incomplete_blocks) { // process the last incomplete row of pixel blocks here,
 
@@ -209,7 +209,7 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
             blockavg_green /= pblocksize_bottom;
             blockavg_red   /= pblocksize_bottom;
 
-            DEBUG_ONLY(incomplete++);
+            DEBUG_EXEC(incomplete++);
 
             // if (!(blockavg_blue <= 255.00 && blockavg_green <= 255.00 && blockavg_red <= 255.00))
             //     wprintf_s(L"Average (BGR) = (%.4f, %.4f, %.4f)\n", blockavg_blue, blockavg_green, blockavg_red);

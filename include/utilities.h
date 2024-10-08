@@ -22,10 +22,10 @@
 
 #ifdef _DEBUG
     #define dbgwprintf_s(...) wprintf_s(__VA_ARGS__)
-    #define DEBUG_ONLY(...)   (__VA_ARGS__)
+    #define DEBUG_EXEC(...)   (__VA_ARGS__)
 #else
     #define dbgwprintf_s(...)
-    #define DEBUG_ONLY(...)
+    #define DEBUG_EXEC(...)
 #endif // _DEBUG
 
 // typedef struct tagRGBQUAD {
@@ -88,8 +88,7 @@ static const wchar_t palette_extended[] = { L' ',  L'.', L'\'', L'`', L'^', L'"'
                                             L'k',  L'h', L'a',  L'o', L'*', L'#', L'M', L'W', L'&', L'8', L'%', L'B', L'@', L'$' };
 #pragma endregion
 
-#ifdef __WANT_PRIMITIVE_TRANSFORMERS__
-    #pragma region __PRIMITIVE_TRANSFORMERS__
+#pragma region __PRIMITIVE_TRANSFORMERS__
 
 // arithmetic average of an RGB pixel values
 static inline unsigned __stdcall arithmetic_average(_In_ const register RGBQUAD* const restrict pixel) {
@@ -114,8 +113,7 @@ static inline unsigned __stdcall minmax_average(_In_ const register RGBQUAD* con
 static inline unsigned __stdcall luminosity(_In_ const register RGBQUAD* const restrict pixel) {
     return pixel->rgbBlue * 0.2126 + pixel->rgbGreen * 0.7152 + pixel->rgbRed * 0.0722;
 }
-    #pragma endregion
-#endif // __WANT_PRIMITIVE_TRANSFORMERS__
+#pragma endregion
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 // transformers that map an RGB pixel to a representative unicode character, using the provided palette //
