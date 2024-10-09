@@ -1,4 +1,4 @@
-#ifndef __TEST_BMPTOASCII__
+#ifndef __TEST__
     #include <tostring.h>
 
 int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
@@ -54,4 +54,4 @@ int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
     return EXIT_SUCCESS;
 }
 
-#endif // !__TEST_BMPTOASCII__
+#endif

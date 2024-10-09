@@ -28,13 +28,6 @@
     #define DEBUG_EXEC(...)
 #endif // _DEBUG
 
-// typedef struct tagRGBQUAD {
-//         BYTE rgbBlue;
-//         BYTE rgbGreen;
-//         BYTE rgbRed;
-//         BYTE rgbReserved;
-// } RGBQUAD;
-
 static inline uint8_t* __cdecl open(_In_ const wchar_t* const restrict filename, _Inout_ unsigned* const restrict rbytes) {
     LARGE_INTEGER liFsize = { .QuadPart = 0LLU };
     uint8_t*      buffer  = NULL;

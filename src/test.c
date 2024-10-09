@@ -1,14 +1,11 @@
-// clang .\src\test.c -I .\include\ -Wall -Wextra -O3 -pedantic -march=native -std=c23 -D__TEST_BMPTOASCII__
+#ifdef __TEST__
 
-#define TEST_TIMES 5LL // DON'T EVEN THINK ABOUT INCREASING THIS. WITH 5 ALONE, TESTING TOOK A FEW MINUTES TO FINISH!
-
-#ifdef __TEST_BMPTOASCII__
-    #define __WANT_PRIMITIVE_TRANSFORMERS__
+    #define TEST_TIMES 5LL // DON'T EVEN THINK ABOUT INCREASING THIS. WITH 5 ALONE, TESTING TOOK A FEW MINUTES TO FINISH!
     #include <time.h>
     #include <tostring.h>
 
-static_assert(sizeof(BITMAPINFOHEADER) == 40LLU, "BITMAPINFOHEADER is expected to be 40 bytes in size, but is not so!");
-static_assert(sizeof(BITMAPFILEHEADER) == 14LLU, "BITMAPFILEHEADER is expected to be 14 bytes in size, but is not so!");
+static_assert(sizeof(BITMAPINFOHEADER) == 40LLU);
+static_assert(sizeof(BITMAPFILEHEADER) == 14LLU);
 
 static const RGBQUAD min                    = { .rgbBlue = 0x00, .rgbGreen = 0x00, .rgbRed = 0x00, .rgbReserved = 0xFF };
 static const RGBQUAD mid                    = { .rgbBlue = 0x80, .rgbGreen = 0x80, .rgbRed = 0x80, .rgbReserved = 0xFF };
@@ -29,7 +26,7 @@ static const unsigned char const dummybmp[] = {
 };
 
 static const float RNDMAX = RAND_MAX + 2.0000;
-// the +2.0000 is just for extra safety that we do not get too close to 1.000 when dividing rand() by RNDMAX
+// the + 2.0000 is just for extra safety that we do not get too close to 1.000 when dividing rand() by RNDMAX
 
 int wmain(void) {
     srand(time(NULL));
@@ -259,4 +256,4 @@ int wmain(void) {
     return EXIT_SUCCESS;
 }
 
-#endif // __TEST_BMPTOASCII__
+#endif
