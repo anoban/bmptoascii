@@ -71,12 +71,13 @@ static inline wchar_t __stdcall penalizing_minmaxmapper(...);
 static inline wchar_t __stdcall penalizing_luminositymapper(...);
 ```
 
-### ___Examples with the default `weighted_blockmapper()`___
 ------
 
 <div><img src="./readme/jennifer_lawrence.jpg"  width=45%> <img src="./readme/jennifer.jpg" width=45%></div>
 <div><img src="./readme/vendetta-wallpaper.jpg"  width=45%> <img src="./readme/vendetta.jpg" width=45%></div>
 <div><img src="./readme/ginger_woman.jpg"  width=45%> <img src="./readme/ginger.jpg" width=45%></div>
+<div><img src="./readme/butterflies_2.jpg"  width=45%> <img src="./readme/butterflies.jpg" width=45%></div>
+<div><img src="./readme/jaguar_1.jpg"  width=45%> <img src="./readme/jaguar.jpg" width=45%></div>
 
 ### ___Caveats___
 -----------------

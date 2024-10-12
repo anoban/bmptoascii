@@ -8,7 +8,7 @@
 //    PLACE FOR CUSTOMIZATIONS    //
 ////////////////////////////////////
 #define spalette                   palette                                                      // PICK ONE OF THE THREE AVALIABLE PALETTES
-#define map(_pixel)                arithmetic_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
+#define map(_pixel)                luminosity_mapper(_pixel, spalette, __crt_countof(spalette)) // CHOOSE A BASIC MAPPER OF YOUR LIKING
 
 // CHOOSE A BLOCK MAPPER OF YOUR LIKING
 #define blockmap(blue, green, red) weighted_blockmapper(blue, green, red, spalette, __crt_countof(spalette))
