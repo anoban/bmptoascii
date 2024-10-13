@@ -72,6 +72,8 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 ```
 
 ------
+___The distortion in the image dimension during ascii mapping comes from the inherent non-square shaped nature of most typefaces,
+even with monospaced typefaces, characters are taller than they are wide!. This unfortunately makes the ascii representations seem vertically stretched :(___
 
 <div><img src="./readme/jennifer_lawrence.jpg"  width=45%> <img src="./readme/jennifer.jpg" width=45%></div>
 <div><img src="./readme/vendetta-wallpaper.jpg"  width=45%> <img src="./readme/vendetta.jpg" width=45%></div>
@@ -87,5 +89,7 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 - Owing to the liberal reliance on `Win32` API, will not compile on UNIX systems without substantial effort.
 - Not particularly good at capturing specific details in images, especially if the images are large and those details are represented by granular differences in colour gradients (this specificity gets lost in the black and white transformation and downscaling)
 - Best results with colour images are obtained when there's a stark contrast between the object of interest and the background (even with a penalizing mapper).
+- Monospaced typefaces are critical to get decent renders, non-monospaced typefaces will probably make the patterns incoherent and indistinguishable!
+         
 
 ___For a comprehensive explanation of the implementation, browse the source code, it is thoroughly annotated!.___
