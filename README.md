@@ -72,8 +72,9 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 ```
 
 ------
-___The distortion in the image dimension during ascii mapping comes from the inherent non-square shaped nature of most typefaces,
-even with monospaced typefaces, characters are taller than they are wide!. This unfortunately makes the ascii representations seem vertically stretched :(___
+
+The distortion in the image dimension during ascii mapping comes from the inherent non-square shaped nature of most typefaces.
+Even with monospaced typefaces, characters are taller than they are wide!. This unfortunately makes the ascii representations seem vertically stretched :(   
 
 <div><img src="./readme/jennifer_lawrence.jpg"  width=45%> <img src="./readme/jennifer.jpg" width=45%></div>
 <div><img src="./readme/vendetta-wallpaper.jpg"  width=45%> <img src="./readme/vendetta.jpg" width=45%></div>
