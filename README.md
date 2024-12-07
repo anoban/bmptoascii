@@ -13,30 +13,25 @@ static const wchar_t palette_extended[] = { ... };
 For the RGB to ascii conversion, a string of mappers are available in `<utilities.h>`:
 
 ```C
-// uses the arithmetic average of the red, green and blue values of the pixel to determine which 
-// wide character to map
+// uses the arithmetic average of the red, green and blue values of pixels
 static inline wchar_t __stdcall arithmetic_mapper(
     _In_ const register RGBQUAD* const restrict pixel,
     _In_ const register wchar_t* const restrict palette,
     _In_ const register unsigned plength
 );
 
-// uses a predetermined set of weights for red, green and blue values of the pixel to determine 
-// the wide character
+// scales red, green and blue values of pixels with predetermined weights
 static inline wchar_t __stdcall weighted_mapper(...);
 
-// uses the average of the minimum and maximum amongst the red, green and blue values of the 
-// pixel to determine the wide character
+// uses the average of the minimum and maximum values amongst red, green and blue values of each pixel
 static inline wchar_t __stdcall minmax_mapper(...);
 
-// uses a predetermined set of weights (different from the weights used by weighted_mapper) for
-// red, green and blue values of the pixel to determine the wide character
+// scales red, green and blue values of pixels with predetermined weights (different from the weights used by weighted_mapper) 
 static inline wchar_t __stdcall luminosity_mapper(...);
 ```
 
 ```C
-// allows customization of the weights that were predetermined in the weighted and luminosity
-// mappers
+// allows customization of the weights that were hardcoded in weighted and luminosity mappers
 static inline wchar_t __stdcall tunable_mapper(
     _In_ const register RGBQUAD* const restrict pixel,
     _In_ const register float bscale, // scaling factor for blue
@@ -50,9 +45,8 @@ static inline wchar_t __stdcall tunable_mapper(
 There are also an array of penalizing transformers in `<utilities.h>` that facilitate penaliztion of character mapping when pixels meet a specified criteria:
 
 ```C
-// this mapper will penalize the result of the mapper by the specified penalty value
-// when the pixel's RGB values all fall within the ranges specified by the <>llim (lower limit)
-// and <>ulim (upper limit) delimiters.
+// this mapper will penalize the result of the mapper by the specified penalty value when the pixel's RGB values all fall
+// within the ranges specified by the <>llim (lower limit) and <>ulim (upper limit) delimiters.
 static __forceinline wchar_t __stdcall penalizing_arithmeticmapper(
     _In_ const register RGBQUAD* const restrict pixel,
     _In_ const register uint8_t bllim, // lower limit for blue
