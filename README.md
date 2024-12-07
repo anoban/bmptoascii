@@ -1,7 +1,7 @@
+___BEWARE: Examples in the README use JPEG convets of the bitmaps because BMPs take up too much space in the repository!___
+
 ## ___Windows BMP images to ASCII strings___
 --------------
-
-_Examples in the README use JPEG version of the bitmaps because BMPs take up too much space!_
 
 Three ascii palettes are available in `<utilities.h>` to choose the characters from. These are arrays of wide ascii characters ordered in increasing luminance:
 ```C
@@ -71,7 +71,6 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 <div><img src="./readme/vendetta-wallpaper.jpg"  width=45%> <img src="./readme/vendetta.jpg" width=45%></div>
 <div><img src="./readme/ginger_woman.jpg"  width=45%> <img src="./readme/ginger.jpg" width=45%></div>
 <div><img src="./readme/butterflies_2.jpg"  width=45%> <img src="./readme/butterflies.jpg" width=45%></div>
-<div><img src="./readme/jaguar_1.jpg"  width=45%> <img src="./readme/jaguar.jpg" width=45%></div>
 
 ### ___Caveats___
 -----------------
