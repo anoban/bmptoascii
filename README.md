@@ -1,4 +1,4 @@
-___BEWARE: Examples in the README use JPEG convets of the bitmaps because BMPs take up too much space in the repository!___
+___BEWARE: Examples in the README use JPEG converts of the bitmaps because BMPs take up too much space in the repository!___
 
 ## ___Windows BMP images to ASCII strings___
 --------------
