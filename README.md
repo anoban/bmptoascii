@@ -1,5 +1,3 @@
-___BEWARE: Examples in the README use JPEG converts of the bitmaps because BMPs take up too much space in the repository!___
-
 ## ___Windows BMP images to ASCII strings___
 --------------
 
@@ -15,9 +13,9 @@ For the RGB to ascii conversion, a string of mappers are available in `<utilitie
 ```C
 // uses the arithmetic average of the red, green and blue values of pixels
 static inline wchar_t __stdcall arithmetic_mapper(
-    _In_ const register RGBQUAD* const restrict pixel,
-    _In_ const register wchar_t* const restrict palette,
-    _In_ const register unsigned plength
+    _In_ const  RGBQUAD* const restrict pixel,
+    _In_ const  wchar_t* const restrict palette,
+    _In_ const  unsigned plength
 );
 
 // scales red, green and blue values of pixels with predetermined weights
@@ -33,10 +31,10 @@ static inline wchar_t __stdcall luminosity_mapper(...);
 ```C
 // allows customization of the weights that were hardcoded in weighted and luminosity mappers
 static inline wchar_t __stdcall tunable_mapper(
-    _In_ const register RGBQUAD* const restrict pixel,
-    _In_ const register float bscale, // scaling factor for blue
-    _In_ const register float gscale, // scaling factor for green
-    _In_ const register float rscale, // scaling factor for red
+    _In_ const  RGBQUAD* const restrict pixel,
+    _In_ const  float bscale, // scaling factor for blue
+    _In_ const  float gscale, // scaling factor for green
+    _In_ const  float rscale, // scaling factor for red
     _In_ const wchar_t* const restrict palette,
     _In_ const unsigned plength
 );
@@ -48,16 +46,16 @@ There are also an array of penalizing transformers in `<utilities.h>` that facil
 // this mapper will penalize the result of the mapper by the specified penalty value when the pixel's RGB values all fall
 // within the ranges specified by the <>llim (lower limit) and <>ulim (upper limit) delimiters.
 static __forceinline wchar_t __stdcall penalizing_arithmeticmapper(
-    _In_ const register RGBQUAD* const restrict pixel,
-    _In_ const register unsigned char bllim, // lower limit for blue
-    _In_ const register unsigned char bulim, // upper limit for blue
-    _In_ const register unsigned char gllim,
-    _In_ const register unsigned char gulim,
-    _In_ const register unsigned char rllim,
-    _In_ const register unsigned char rulim,
+    _In_ const  RGBQUAD* const restrict pixel,
+    _In_ const  unsigned char bllim, // lower limit for blue
+    _In_ const  unsigned char bulim, // upper limit for blue
+    _In_ const  unsigned char gllim,
+    _In_ const  unsigned char gulim,
+    _In_ const  unsigned char rllim,
+    _In_ const  unsigned char rulim,
     _In_ const wchar_t* const restrict palette,
-    _In_ const register unsigned plength,
-    _In_ const register float    penalty
+    _In_ const  unsigned plength,
+    _In_ const  float    penalty
 );
 
 static inline wchar_t __stdcall penalizing_weightedmapper(...);

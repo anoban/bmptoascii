@@ -1,9 +1,12 @@
 #pragma once
 
-#include <_wingdi.h>
 #include <assert.h>
 #include <stdbool.h>
-#include <utilities.h>
+
+// clang-format off
+#include <_wingdi.h>
+#include <_utils.h>
+// clang-format on
 
 // a struct representing a windows bitmap
 typedef struct bitmap {
