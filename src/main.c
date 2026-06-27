@@ -1,29 +1,26 @@
 #ifndef __TEST__
-    #include <tostring.h>
+    #include <_tostring.h>
 
 int main(const int argc, char* argv[]) {
     #ifdef _DEBUG
-
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
 
     const wchar_t* const bitmaps[] = { L"./test/bobmarley.bmp", L"./test/football.bmp", L"./test/garfield.bmp", L"./test/gewn.bmp",
                                        L"./test/girl.bmp",      L"./test/jennifer.bmp", L"./test/messi.bmp",    L"./test/supergirl.bmp",
                                        L"./test/time.bmp",      L"./test/uefa2024.bmp", L"./test/vendetta.bmp", NULL };
     const wchar_t**      _ptr      = bitmaps;
     while (*_ptr) {
-        bitmap_t image                     = bitmap_read(*_ptr);
+        bitmap_t image                     = bmpread(*_ptr);
         const wchar_t* const restrict wstr = to_string(&image);
         if (!wstr) {
             wprintf_s(L"Error :: failed processing image %s!\n", *_ptr);
-            bitmap_close(&image);
+            bmpclose(&image);
             continue; // move on to the next image
         }
 
         _putws(wstr);
         _putws(L"\n\n");
         free(wstr);
-        bitmap_close(&image);
+        bmpclose(&image);
         _ptr++;
     }
 
@@ -35,18 +32,18 @@ int main(const int argc, char* argv[]) {
     }
 
     for (int i = 1; i < argc; ++i) {
-        bitmap_t image                     = bitmap_read(argv[i]);
+        bitmap_t image                     = bmpread(argv[i]);
         const wchar_t* const restrict wstr = to_string(&image);
         if (!wstr) {
             wprintf_s(L"Error :: failed processing image %s!\n", argv[i]);
-            bitmap_close(&image);
+            bmpclose(&image);
             continue; // move on to the next image
         }
 
         _putws(wstr);
         _putws(L"\n\n");
         free(wstr);
-        bitmap_close(&image);
+        bmpclose(&image);
     }
 
     #endif

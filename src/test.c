@@ -73,8 +73,8 @@ int wmain(void) {
     #pragma endregion
 
     #pragma region __TEST_RGBMAPPERS__
-    RGBQUAD temp    = { 0 };
-    float   bscaler = 0.000, gscaler = 0.000, rscaler = 0.000, rnd = 0.000;
+    RGBQUAD       temp    = { 0 };
+    float         bscaler = 0.000, gscaler = 0.000, rscaler = 0.000, rnd = 0.000;
     unsigned char r = 0, g = 0, b = 0;
 
     for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
@@ -235,11 +235,11 @@ int wmain(void) {
 
     const wchar_t** _ptr                    = filenames;
     while (*_ptr) {
-        bitmap_t image                     = bitmap_read(*_ptr);
+        bitmap_t image                     = bmpread(*_ptr);
         const wchar_t* const restrict wstr = to_string(&image);
         if (!wstr) {
             wprintf_s(L"Error :: cannot process %s!\n", *_ptr);
-            bitmap_close(&image);
+            bmpclose(&image);
             continue;
         }
 
@@ -247,7 +247,7 @@ int wmain(void) {
         _putws(L"\n\n");
 
         free(wstr);
-        bitmap_close(&image);
+        bmpclose(&image);
         _ptr++;
     }
     #pragma endregion

@@ -1,3 +1,5 @@
+#pragma once
+
 // a proxy header to provide definitions for some essential structs
 
 // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-rgbquad

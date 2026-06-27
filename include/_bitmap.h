@@ -73,11 +73,11 @@ static inline BITMAP_PIXEL_ORDERING get_pixel_order(const BITMAPINFOHEADER* cons
 }
 
 // reads in a bmp file from disk and deserializes it into a bitmap_t struct
-static inline bitmap_t bitmap_read(const wchar_t* const restrict filepath) {
+static inline bitmap_t bmpread(const char* const filepath) {
     unsigned size  = 0;
     bitmap_t image = { 0 }; // will be used as an empty placeholder for premature returns until members are properly assigned
 
-    const unsigned char* const buffer = open(filepath, &size);
+    const unsigned char* const buffer = imopen(filepath, &size);
     if (!buffer) return image; // open will do the error reporting, so just exiting the function is enough
 
     const BITMAPFILEHEADER fhead = parse_fileheader(buffer, size);
@@ -96,7 +96,7 @@ static inline bitmap_t bitmap_read(const wchar_t* const restrict filepath) {
 }
 
 // use this to cleanup a bitmap_t after its use
-static inline void bitmap_close(bitmap_t* const restrict image) {
+static inline void bmpclose(bitmap_t* const image) {
     free(image->_buffer);
     memset(image, 0U, sizeof(bitmap_t));
 }
