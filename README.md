@@ -26,7 +26,7 @@ static inline wchar_t __stdcall weighted_mapper(...);
 // uses the average of the minimum and maximum values amongst red, green and blue values of each pixel
 static inline wchar_t __stdcall minmax_mapper(...);
 
-// scales red, green and blue values of pixels with predetermined weights (different from the weights used by weighted_mapper) 
+// scales red, green and blue values of pixels with predetermined weights (different from the weights used by weighted_mapper)
 static inline wchar_t __stdcall luminosity_mapper(...);
 ```
 
@@ -49,12 +49,12 @@ There are also an array of penalizing transformers in `<utilities.h>` that facil
 // within the ranges specified by the <>llim (lower limit) and <>ulim (upper limit) delimiters.
 static __forceinline wchar_t __stdcall penalizing_arithmeticmapper(
     _In_ const register RGBQUAD* const restrict pixel,
-    _In_ const register uint8_t bllim, // lower limit for blue
-    _In_ const register uint8_t bulim, // upper limit for blue
-    _In_ const register uint8_t gllim,
-    _In_ const register uint8_t gulim,
-    _In_ const register uint8_t rllim,
-    _In_ const register uint8_t rulim,
+    _In_ const register unsigned char bllim, // lower limit for blue
+    _In_ const register unsigned char bulim, // upper limit for blue
+    _In_ const register unsigned char gllim,
+    _In_ const register unsigned char gulim,
+    _In_ const register unsigned char rllim,
+    _In_ const register unsigned char rulim,
     _In_ const wchar_t* const restrict palette,
     _In_ const register unsigned plength,
     _In_ const register float    penalty
@@ -82,6 +82,6 @@ static inline wchar_t __stdcall penalizing_luminositymapper(...);
 - Best results with colour images are obtained when there's a stark contrast between the object of interest and the background (even with a penalizing mapper).
 - Monospaced typefaces are critical to get decent renders, non-monospaced typefaces will probably make the patterns incoherent and indistinguishable!
 - The distortion in the image dimension during ascii mapping comes from the inherent non-square shaped nature of most typefaces.
-Even with monospaced typefaces, characters are taller than they are wide!. This unfortunately makes the ascii representations seem vertically stretched :(   
+Even with monospaced typefaces, characters are taller than they are wide!. This unfortunately makes the ascii representations seem vertically stretched :(
 
 ___For a comprehensive explanation of the implementation, browse the source code, it is thoroughly annotated!.___

@@ -1,7 +1,7 @@
 #ifndef __TEST__
     #include <tostring.h>
 
-int wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) wchar_t* argv[]) {
+int main(const int argc, char* argv[]) {
     #ifdef _DEBUG
 
     UNREFERENCED_PARAMETER(argc);

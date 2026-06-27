@@ -75,7 +75,7 @@ int wmain(void) {
     #pragma region __TEST_RGBMAPPERS__
     RGBQUAD temp    = { 0 };
     float   bscaler = 0.000, gscaler = 0.000, rscaler = 0.000, rnd = 0.000;
-    uint8_t r = 0, g = 0, b = 0;
+    unsigned char r = 0, g = 0, b = 0;
 
     for (unsigned blue = 0; blue <= UCHAR_MAX; ++blue) {
         for (unsigned green = 0; green <= UCHAR_MAX; ++green) {

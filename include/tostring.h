@@ -16,7 +16,7 @@
 // IT IS NOT OBLIGATORY FOR BOTH THE BASIC MAPPER AND THE BLOCK MAPPER TO USE THE SAME PALETTE
 // IF NEED BE, THE PALETTE EXPANDED FROM spalette COULD BE REPLACED BY A REAL PALETTE NAME
 
-static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict image) {
+static inline wchar_t* to_raw_string(const bitmap_t* const restrict image) {
     if (image->_infoheader.biHeight < 0) {
         fputws(L"Error in to_raw_string, this tool does not support bitmaps with top-down pixel ordering!\n", stderr);
         return NULL;
@@ -62,7 +62,7 @@ static inline wchar_t* __cdecl to_raw_string(_In_ const bitmap_t* const restrict
 // generate the wchar_t buffer after downscaling the image such that the ascii representation will fit the terminal width (~142 chars),
 // downscaling is completely predicated only on the image width, and the proportionate scaling factor will be used to scale down the image vertically too.
 // downscaling needs to be done in square pixel blocks which will be represented by a single wchar_t
-static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const restrict image) {
+static inline wchar_t* to_downscaled_string(const bitmap_t* const restrict image) {
     if (image->_infoheader.biHeight < 0) {
         fputws(L"Error in to_downscaled_string, this tool does not support bitmaps with top-down pixel ordering!\n", stderr);
         return NULL;
@@ -235,7 +235,7 @@ static inline wchar_t* __cdecl to_downscaled_string(_In_ const bitmap_t* const r
 }
 
 // an image width predicated dispatcher for to_raw_string and to_downscaled_string
-static inline wchar_t* __cdecl to_string(_In_ const bitmap_t* const restrict image) {
+static inline wchar_t* to_string(const bitmap_t* const restrict image) {
     if (image->_infoheader.biWidth <= CONSOLE_WIDTH) return to_raw_string(image);
     return to_downscaled_string(image);
 }
