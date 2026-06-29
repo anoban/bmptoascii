@@ -38,17 +38,17 @@ int wmain(void) {
     #pragma endregion
 
     #pragma region __TEST_TRANSFORMERS__
-    assert(arithmetic_average(&min) == 0);
-    assert(arithmetic_average(&max) == UCHAR_MAX);
-    assert(arithmetic_average(&mid) == 128);
+    assert(arithmetic(&min) == 0);
+    assert(arithmetic(&max) == UCHAR_MAX);
+    assert(arithmetic(&mid) == 128);
 
-    assert(weighted_average(&min) == 0);
-    assert(weighted_average(&max) == UCHAR_MAX);
-    assert(weighted_average(&mid) == 127);
+    assert(weighted(&min) == 0);
+    assert(weighted(&max) == UCHAR_MAX);
+    assert(weighted(&mid) == 127);
 
-    assert(minmax_average(&min) == 0);
-    assert(minmax_average(&max) == UCHAR_MAX);
-    assert(minmax_average(&mid) == 128);
+    assert(minmax(&min) == 0);
+    assert(minmax(&max) == UCHAR_MAX);
+    assert(minmax(&mid) == 128);
 
     assert(luminosity(&min) == 0);
     assert(luminosity(&max) == UCHAR_MAX - 1);
@@ -63,9 +63,9 @@ int wmain(void) {
                 test.rgbGreen = green;
                 test.rgbRed   = red;
                 // unsigned returns will always be greater than or equal to 0, so not testing against 0
-                assert(arithmetic_average(&test) <= UCHAR_MAX);
-                assert(weighted_average(&test) <= UCHAR_MAX);
-                assert(minmax_average(&test) <= UCHAR_MAX);
+                assert(arithmetic(&test) <= UCHAR_MAX);
+                assert(weighted(&test) <= UCHAR_MAX);
+                assert(minmax(&test) <= UCHAR_MAX);
                 assert(luminosity(&test) <= UCHAR_MAX);
             }
         }

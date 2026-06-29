@@ -32,7 +32,7 @@ int main(const int argc, char* argv[]) {
     }
 
     for (int i = 1; i < argc; ++i) {
-        bitmap_t image                     = bmpread(argv[i]);
+        bitmap image                       = bmpread(argv[i]);
         const wchar_t* const restrict wstr = to_string(&image);
         if (!wstr) {
             wprintf_s(L"Error :: failed processing image %s!\n", argv[i]);

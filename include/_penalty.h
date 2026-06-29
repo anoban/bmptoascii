@@ -44,13 +44,13 @@ static __attribute__((always_inline)) wchar_t penalizing_arithmeticmapper(
     // because you'll be paying dearly for something you do not need!
     assert(penalty >= 0.00000 && penalty <= ONE);
 
-    const bool penalize   = ((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
-                            ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
-                            ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim));
+    const bool penalize   = (((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
+                             ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
+                             ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim))) != 0;
 
     const unsigned offset = ((((float) (pixel->rgbBlue)) + pixel->rgbGreen + pixel->rgbRed) /
                              3.000) /* an enclosing parens here because we do not want zero division exceptions */
-                            * (penalize ? (ONE - penalty) : 1);
+                            * ((int) penalize ? (ONE - penalty) : 1);
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
 
@@ -67,11 +67,12 @@ static __attribute__((always_inline)) wchar_t penalizing_weightedmapper(
     const float    penalty
 ) {
     assert(penalty >= 0.00000 && penalty <= ONE);
-    const bool penalize   = ((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
-                            ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
-                            ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim));
+    const bool penalize = (((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
+                           ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
+                           ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim))) != 0;
 
-    const unsigned offset = (pixel->rgbBlue * 0.299 + pixel->rgbGreen * 0.587 + pixel->rgbRed * 0.114) * (penalize ? (ONE - penalty) : 1);
+    const unsigned offset =
+        (pixel->rgbBlue * 0.299 + pixel->rgbGreen * 0.587 + pixel->rgbRed * 0.114) * ((int) penalize ? (ONE - penalty) : 1);
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
 
@@ -88,12 +89,12 @@ static __attribute__((always_inline)) wchar_t penalizing_minmaxmapper(
     const float    penalty
 ) {
     assert(penalty >= 0.00000 && penalty <= ONE);
-    const bool penalize   = ((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
-                            ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
-                            ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim));
+    const bool penalize   = (((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
+                             ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
+                             ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim))) != 0;
 
-    const unsigned offset = (((float) (min(min(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed))) +
-                             (max(max(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed)) / 2.0000) *
+    const unsigned offset = (((float) (min(min(pixel->rgbBlue = 0, pixel->rgbGreen), pixel->rgbRed))) +
+                             (fmax(fmax(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed)) / 2.0000) *
                             (penalize ? (ONE - penalty) : 1);
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
@@ -111,12 +112,12 @@ static __attribute__((always_inline)) wchar_t penalizing_luminositymapper(
     const float    penalty
 ) {
     assert(penalty >= 0.00000 && penalty <= ONE);
-    const bool penalize = ((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
-                          ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
-                          ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim));
+    const bool penalize = (((bllim != bulim) && (pixel->rgbBlue >= bllim) && (pixel->rgbBlue <= bulim)) ||
+                           ((gllim != gulim) && (pixel->rgbGreen >= gllim) && (pixel->rgbGreen <= gulim)) ||
+                           ((rllim != rulim) && (pixel->rgbRed >= rllim) && (pixel->rgbRed <= rulim))) != 0;
 
     const unsigned offset =
-        (pixel->rgbBlue * 0.2126 + pixel->rgbGreen * 0.7152 + pixel->rgbRed * 0.0722) * (penalize ? (ONE - penalty) : 1);
+        (pixel->rgbBlue * 0.2126 + pixel->rgbGreen * 0.7152 + pixel->rgbRed * 0.0722) * ((int) penalize ? (ONE - penalty) : 1);
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
 
@@ -158,13 +159,13 @@ static __attribute__((always_inline)) wchar_t penalizing_arithmeticblockmapper(
     // because you'll be paying dearly for something you do not need!
     assert(penalty >= 0.00000 && penalty <= ONE);
 
-    const bool penalize = ((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
-                          ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
-                          ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim));
+    const bool penalize = (((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
+                           ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
+                           ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim))) != 0;
 
     const unsigned offset =
         ((rgbBlue + rgbGreen + rgbRed) / 3.000) /* an enclosing parens here because we do not want zero division exceptions */
-        * (penalize ? (ONE - penalty) : 1);
+        * ((int) penalize ? (ONE - penalty) : 1);
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
 
@@ -183,11 +184,11 @@ static __attribute__((always_inline)) wchar_t penalizing_weightedblockmapper(
     const float    penalty
 ) {
     assert(penalty >= 0.00000 && penalty <= ONE);
-    const bool penalize   = ((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
-                            ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
-                            ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim));
+    const bool penalize   = (((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
+                             ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
+                             ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim))) != 0;
 
-    const unsigned offset = (rgbBlue * 0.299 + rgbGreen * 0.587 + rgbRed * 0.114) * (penalize ? (ONE - penalty) : 1);
+    const unsigned offset = (rgbBlue * 0.299 + rgbGreen * 0.587 + rgbRed * 0.114) * ((int) penalize ? (ONE - penalty) : 1);
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
 
@@ -206,12 +207,12 @@ static __attribute__((always_inline)) wchar_t penalizing_minmaxblockmapper(
     const float    penalty
 ) {
     assert(penalty >= 0.00000 && penalty <= ONE);
-    const bool penalize = ((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
-                          ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
-                          ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim));
+    const bool penalize = (((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
+                           ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
+                           ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim))) != 0;
 
     const unsigned offset =
-        ((min(min(rgbBlue, rgbGreen), rgbRed) + max(max(rgbBlue, rgbGreen), rgbRed)) / 2.0000) * (penalize ? (ONE - penalty) : 1);
+        ((min(min(rgbBlue = 0, rgbGreen), rgbRed) + max(max(rgbBlue, rgbGreen), rgbRed)) / 2.0000) * (penalize ? (ONE - penalty) : 1);
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
 
@@ -230,10 +231,10 @@ static __attribute__((always_inline)) wchar_t penalizing_luminosityblockmapper(
     const float    penalty
 ) {
     assert(penalty >= 0.00000 && penalty <= ONE);
-    const bool penalize   = ((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
-                            ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
-                            ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim));
+    const bool penalize   = (((bllim != bulim) && (rgbBlue >= bllim) && (rgbBlue <= bulim)) ||
+                             ((gllim != gulim) && (rgbGreen >= gllim) && (rgbGreen <= gulim)) ||
+                             ((rllim != rulim) && (rgbRed >= rllim) && (rgbRed <= rulim))) != 0;
 
-    const unsigned offset = (rgbBlue * 0.2126 + rgbGreen * 0.7152 + rgbRed * 0.0722) * (penalize ? (ONE - penalty) : 1);
+    const unsigned offset = (rgbBlue * 0.2126 + rgbGreen * 0.7152 + rgbRed * 0.0722) * ((int) penalize ? (ONE - penalty) : 1);
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }

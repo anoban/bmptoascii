@@ -63,8 +63,6 @@
 Checks: >
   -*,
   bugprone-assert-side-effect,
-  bugprone-assignment-in-if-condition,
-  bugprone-bool-pointer-implicit-conversion,
   bugprone-branch-clone,
   bugprone-casting-through-void,
   bugprone-chained-comparison,

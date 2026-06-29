@@ -1,6 +1,8 @@
 #pragma once
 
-#define ONE 1.000000000F
+#define ONE       1.000000000
+#define min(x, y) (((x) < (y) ? (x) : (y)))
+#define max(x, y) (((x) > (y) ? (x) : (y)))
 
 #include <assert.h>
 #include <errno.h>
@@ -79,27 +81,27 @@ static const char palette_extended[] = { ' ', '.', '\'', '`', '^', '"', ',', ':'
                                          'd', 'b', 'k',  'h', 'a', 'o', '*', '#', 'M', 'W',  '&',  '8', '%', 'B', '@', '$' };
 
 // arithmetic average of an RGB pixel values
-static inline unsigned arithmetic_average(const RGBQUAD* const restrict pixel) {
+static inline unsigned arithmetic(const RGBQUAD* const restrict pixel) {
     // we don't want overflows or truncations here
-    return (((float) (pixel->rgbBlue)) + pixel->rgbGreen + pixel->rgbRed) / 3.000;
+    return (unsigned) ((((double) pixel->rgbBlue) + pixel->rgbGreen + pixel->rgbRed) / 3.000);
 }
 
 // weighted average of an RGB pixel values
-static inline unsigned weighted_average(const RGBQUAD* const restrict pixel) {
-    return pixel->rgbBlue * 0.299 + pixel->rgbGreen * 0.587 + pixel->rgbRed * 0.114;
+static inline unsigned weighted(const RGBQUAD* const restrict pixel) {
+    return (unsigned) (pixel->rgbBlue * 0.299 + pixel->rgbGreen * 0.587 + pixel->rgbRed * 0.114);
 }
 
 // average of minimum and maximum RGB values in a pixel
-static inline unsigned minmax_average(const RGBQUAD* const restrict pixel) {
+static inline unsigned minmax(const RGBQUAD* const restrict pixel) {
     // we don't want overflows or truncations here
-    return (((float) (min(min(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed))) +
-            (max(max(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed))) /
-           2.0000;
+    return (unsigned) ((((double) min(min(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed)) +
+                        max(max(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed)) /
+                       2.0000);
 }
 
 // luminosity of an RGB pixel
 static inline unsigned luminosity(const RGBQUAD* const restrict pixel) {
-    return pixel->rgbBlue * 0.2126 + pixel->rgbGreen * 0.7152 + pixel->rgbRed * 0.0722;
+    return (unsigned) (pixel->rgbBlue * 0.2126 + pixel->rgbGreen * 0.7152 + pixel->rgbRed * 0.0722);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +125,7 @@ static inline unsigned luminosity(const RGBQUAD* const restrict pixel) {
 // a handrolled inline function will be the best choice!
 
 // taking it for granted that the input will never be a negative value,
-static inline unsigned nudge(const float _value) { return _value < 1.000000 ? 1 : _value; }
+static inline unsigned nudge(const float _value) { return _value < 1.000000 ? 1 : (unsigned) _value; }
 
 static inline wchar_t arithmetic_mapper(
     const RGBQUAD* const restrict pixel, const wchar_t* const restrict palette, const unsigned plength
@@ -140,7 +142,7 @@ static inline wchar_t weighted_mapper(const RGBQUAD* const restrict pixel, const
 
 static inline wchar_t minmax_mapper(const RGBQUAD* const restrict pixel, const wchar_t* const restrict palette, const unsigned plength) {
     const unsigned offset = (((float) (min(min(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed))) +
-                             (max(max(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed))) /
+                             (fmax(fmax(pixel->rgbBlue, pixel->rgbGreen), pixel->rgbRed))) /
                             2.0000;
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
@@ -170,7 +172,7 @@ static inline wchar_t weighted_blockmapper(
 static inline wchar_t minmax_blockmapper(
     const float rgbBlue, const float rgbGreen, const float rgbRed, const wchar_t* const restrict palette, const unsigned plength
 ) {
-    const unsigned offset = (min(min(rgbBlue, rgbGreen), rgbRed) + max(max(rgbBlue, rgbGreen), rgbRed)) / 2.0000;
+    const unsigned offset = (min(min(rgbBlue, rgbGreen), rgbRed) + fmax(max(rgbBlue, rgbGreen), rgbRed)) / 2.0000;
     return palette[offset ? nudge(offset / (float) (UCHAR_MAX) *plength) - 1 : 0];
 }
 
