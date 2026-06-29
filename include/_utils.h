@@ -22,10 +22,10 @@
 // clang-format on
 
 #ifdef _DEBUG
-    #define dbgwprintf_s(...) wprintf_s(__VA_ARGS__)
-    #define DEBUG_EXEC(...)   (__VA_ARGS__)
+    #define __printf_debug(...) printf(__VA_ARGS__)
+    #define DEBUG_EXEC(...)     (__VA_ARGS__)
 #else
-    #define dbgwprintf_s(...)
+    #define __printf_debug(...)
     #define DEBUG_EXEC(...)
 #endif // _DEBUG
 
@@ -71,7 +71,7 @@ CLOSE_AND_RETURN:
 static const char palette_minimal[]  = { '_', '.', ',', '-', '=', '+', ':', ';', 'c', 'b', 'a', '!', '?', '1',
                                          '2', '3', '4', '5', '6', '7', '8', '9', '$', 'W', '#', '@', 'N' };
 
-static const char palette[]          = { ' ', '.', '-', ',', ':', '+', '~', ';', '(', '%', 'x', '1', '*', 'n', 'u',
+static const char palette_base[]     = { ' ', '.', '-', ',', ':', '+', '~', ';', '(', '%', 'x', '1', '*', 'n', 'u',
                                          'T', '3', 'J', '5', '$', 'S', '4', 'F', 'P', 'G', 'O', 'V', 'X', 'E', 'Z',
                                          '8', 'A', 'U', 'D', 'H', 'K', 'W', '@', 'B', 'Q', '#', '0', 'M', 'N' };
 
